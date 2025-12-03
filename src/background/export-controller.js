@@ -109,4 +109,7 @@ export class ExportController {
   }
 }
 
+// Export singleton instance
+export const exportController = new ExportController();
+
 export default ExportController;

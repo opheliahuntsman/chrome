@@ -2,12 +2,12 @@ import { Logger } from '../shared/logger.js';
 import { InputSanitizer } from '../shared/input-sanitizer.js';
 import { FilenameGenerator } from '../shared/filename-generator.js';
 import { DOWNLOAD_CONFIG } from '../shared/constants.js';
+import { stateManager } from './state-manager.js';
 
 const logger = new Logger('DownloadManager');
 
 export class DownloadManager {
-  constructor(stateManager) {
-    this.stateManager = stateManager;
+  constructor() {
     this.sanitizer = new InputSanitizer();
     this.filenameGenerator = new FilenameGenerator();
     this.downloadQueue = [];
@@ -28,8 +28,8 @@ export class DownloadManager {
   }
 
   async downloadImages(images, options = {}) {
-    const filenamePattern = options.filenamePattern || this.stateManager.getSettings().filenamePattern;
-    const folder = options.folder || this.stateManager.getSettings().downloadFolder;
+    const filenamePattern = options.filenamePattern || stateManager.getSettings().filenamePattern;
+    const folder = options.folder || stateManager.getSettings().downloadFolder;
 
     logger.log(`Queuing ${images.length} images for download`);
 
@@ -59,7 +59,7 @@ export class DownloadManager {
 
     this.isDownloading = true;
 
-    const settings = this.stateManager.getSettings();
+    const settings = stateManager.getSettings();
     const concurrentDownloads = settings.concurrentDownloads || DOWNLOAD_CONFIG.CONCURRENT_DOWNLOADS;
 
     while (this.downloadQueue.length > 0 && this.activeDownloads < concurrentDownloads) {
@@ -71,7 +71,7 @@ export class DownloadManager {
   async downloadItem(item) {
     this.activeDownloads++;
 
-    const settings = this.stateManager.getSettings();
+    const settings = stateManager.getSettings();
     const downloadDelay = settings.downloadDelay || 0;
     const batchSize = settings.batchSize || 0;
 
@@ -192,7 +192,7 @@ export class DownloadManager {
       }).catch(() => {});
       
       // Send to content script in active tab
-      const tabId = this.stateManager.getCurrentTab();
+      const tabId = stateManager.getCurrentTab();
       if (tabId) {
         chrome.tabs.sendMessage(tabId, {
           type: 'download/page-complete',
@@ -239,5 +239,8 @@ export class DownloadManager {
     };
   }
 }
+
+// Export singleton instance
+export const downloadManager = new DownloadManager();
 
 export default DownloadManager;

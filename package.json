@@ -1,0 +1,16 @@
+{
+  "name": "stepgallery-chrome-extension",
+  "version": "3.0.4",
+  "description": "Professional image gallery detection, sequential multi-page scraping, pause/resume controls, adaptive timing, and CSV export",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm run build:background && npm run build:content",
+    "build:background": "vite build --config vite.config.background.js",
+    "build:content": "vite build --config vite.config.content.js",
+    "dev": "vite build --watch"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

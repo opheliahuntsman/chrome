@@ -177,4 +177,7 @@ export class StateManager {
   }
 }
 
+// Export singleton instance
+export const stateManager = new StateManager();
+
 export default StateManager;
