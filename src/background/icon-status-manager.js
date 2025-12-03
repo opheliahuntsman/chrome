@@ -138,4 +138,7 @@ export class IconStatusManager {
   }
 }
 
+// Export singleton instance
+export const iconStatusManager = new IconStatusManager();
+
 export default IconStatusManager;

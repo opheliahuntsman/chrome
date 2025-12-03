@@ -1,35 +1,35 @@
 import { Logger } from '../shared/logger.js';
 import { MESSAGE_TYPES, PAGINATION_STATES } from '../shared/constants.js';
 import { CheckpointManager } from '../shared/checkpoint-manager.js';
+import { stateManager } from './state-manager.js';
+import { downloadManager } from './download-manager.js';
+import { exportController } from './export-controller.js';
+import { iconStatusManager } from './icon-status-manager.js';
 
 const logger = new Logger('MessageRouter');
 const TAB_MESSAGE_TIMEOUT = 5000;
 
 export class MessageRouter {
-  constructor(dependencies) {
-    this.state = dependencies.state;
-    this.downloads = dependencies.downloads;
-    this.exports = dependencies.exports;
-    this.iconStatus = dependencies.iconStatus;
+  constructor() {
     this.checkpointManager = new CheckpointManager();
-    this.memoryMonitor = dependencies.memoryMonitor || null;
+    this.memoryMonitor = null;
   }
   
   handleIconStatusUpdate(message) {
     try {
-      if (!this.iconStatus) return;
+      if (!iconStatusManager) return;
       
       if (message.type === 'download/progress' && message.data) {
         const { downloaded, total } = message.data;
-        this.iconStatus.setDownloading(downloaded, total);
+        iconStatusManager.setDownloading(downloaded, total);
       } else if (message.type === 'download/complete') {
-        this.iconStatus.setComplete();
+        iconStatusManager.setComplete();
       } else if (message.type === 'download/page-complete') {
-        this.iconStatus.setWaiting();
+        iconStatusManager.setWaiting();
         setTimeout(() => {
           try {
-            if (this.iconStatus && this.iconStatus.getStatus().status === 'waiting') {
-              this.iconStatus.setIdle();
+            if (iconStatusManager && iconStatusManager.getStatus().status === 'waiting') {
+              iconStatusManager.setIdle();
             }
           } catch (e) {
             logger.debug('Error resetting icon status:', e);
@@ -66,7 +66,7 @@ export class MessageRouter {
   async forwardToActiveTab(message, sendResponse) {
     try {
       const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      const tabId = activeTab?.id || this.state.getCurrentTab();
+      const tabId = activeTab?.id || stateManager.getCurrentTab();
 
       if (!tabId) {
         sendResponse({ success: false, error: 'No active tab available for pagination command' });
@@ -253,7 +253,7 @@ export class MessageRouter {
 
   handleInit(message, sender, sendResponse) {
     if (sender.tab) {
-      this.state.setCurrentTab(sender.tab.id);
+      stateManager.setCurrentTab(sender.tab.id);
       
       chrome.action.setBadgeText({ text: '', tabId: sender.tab.id });
     }
@@ -265,7 +265,7 @@ export class MessageRouter {
   handleGalleryDetected(message, sender, sendResponse) {
     const { isGallery, imageCount } = message.data;
     
-    this.state.updateGalleryStatus(message.data);
+    stateManager.updateGalleryStatus(message.data);
 
     if (isGallery && sender.tab) {
       chrome.action.setBadgeText({ 
@@ -289,13 +289,13 @@ export class MessageRouter {
 
   async handleImagesFound(message, sender, sendResponse) {
     try {
-      const result = await this.state.withLock('images', async () => {
-        return this.state.addImages(message.images);
+      const result = await stateManager.withLock('images', async () => {
+        return stateManager.addImages(message.images);
       });
 
       this.broadcastToUI({
         type: 'images-update',
-        images: this.state.getImages()
+        images: stateManager.getImages()
       });
 
       sendResponse({ success: true, total: result.total, added: result.added });
@@ -307,25 +307,25 @@ export class MessageRouter {
   }
 
   handlePaginationStatus(message, sender, sendResponse) {
-    this.state.updatePaginationStatus(message.data);
+    stateManager.updatePaginationStatus(message.data);
 
     this.broadcastToUI({
       type: 'pagination-status-update',
       data: message.data
     });
 
-    if (this.iconStatus) {
+    if (iconStatusManager) {
       const status = message.data.status || message.data;
       
       if (status === 'paginating' || status === PAGINATION_STATES.RUNNING) {
         const pageNumber = message.data.pageNumber || message.data.currentPage || 1;
-        this.iconStatus.setPaginating(pageNumber);
+        iconStatusManager.setPaginating(pageNumber);
       } else if (status === 'paused' || status === PAGINATION_STATES.PAUSED) {
-        this.iconStatus.setPaused();
+        iconStatusManager.setPaused();
       } else if (status === 'complete' || status === 'stopped') {
-        this.iconStatus.setComplete();
+        iconStatusManager.setComplete();
       } else if (status === 'error') {
-        this.iconStatus.setError(message.data.error || 'Error');
+        iconStatusManager.setError(message.data.error || 'Error');
       }
     }
 
@@ -334,13 +334,13 @@ export class MessageRouter {
   }
 
   handleGetImages(message, sender, sendResponse) {
-    const images = this.state.getImages();
+    const images = stateManager.getImages();
     sendResponse({ success: true, images: images });
     return false;
   }
 
   handleClearImages(message, sender, sendResponse) {
-    this.state.clearImages();
+    stateManager.clearImages();
 
     this.broadcastToUI({
       type: 'images-update',
@@ -352,8 +352,8 @@ export class MessageRouter {
   }
 
   handleSettingsUpdate(message, sender, sendResponse) {
-    this.state.updateSettings(message.settings).then(() => {
-      sendResponse({ success: true, settings: this.state.getSettings() });
+    stateManager.updateSettings(message.settings).then(() => {
+      sendResponse({ success: true, settings: stateManager.getSettings() });
     }).catch(error => {
       sendResponse({ success: false, error: error.message });
     });
@@ -361,33 +361,33 @@ export class MessageRouter {
   }
 
   handleSettingsGet(message, sender, sendResponse) {
-    const settings = this.state.getSettings();
+    const settings = stateManager.getSettings();
     sendResponse({ success: true, settings: settings });
     return false;
   }
 
   async handleDownloadStart(message, sender, sendResponse) {
     try {
-      const images = message.images || this.state.getImages();
+      const images = message.images || stateManager.getImages();
       const options = message.options || {};
 
       // Store the tab ID for sending completion message back
       if (sender.tab && sender.tab.id) {
-        this.state.setCurrentTab(sender.tab.id);
+        stateManager.setCurrentTab(sender.tab.id);
         logger.debug(`Download started from tab: ${sender.tab.id}`);
       }
 
-      if (this.iconStatus) {
-        this.iconStatus.setDownloading(0, images.length);
+      if (iconStatusManager) {
+        iconStatusManager.setDownloading(0, images.length);
       }
 
-      await this.downloads.downloadImages(images, options);
+      await downloadManager.downloadImages(images, options);
 
       sendResponse({ success: true });
     } catch (error) {
       logger.error('Error starting download:', error);
-      if (this.iconStatus) {
-        this.iconStatus.setError('Download failed');
+      if (iconStatusManager) {
+        iconStatusManager.setError('Download failed');
       }
       sendResponse({ success: false, error: error.message });
     }
@@ -396,7 +396,7 @@ export class MessageRouter {
 
   handleBatchResponse(message, sender, sendResponse) {
     try {
-      this.downloads.resumeDownloads(message.continue);
+      downloadManager.resumeDownloads(message.continue);
       sendResponse({ success: true });
     } catch (error) {
       logger.error('Error handling batch response:', error);
@@ -427,10 +427,10 @@ export class MessageRouter {
   async handleExport(message, sender, sendResponse) {
     try {
       const format = message.type.split('/')[1];
-      const images = message.data?.images || this.state.getImages();
+      const images = message.data?.images || stateManager.getImages();
       const options = message.data || {};
 
-      const result = await this.exports.exportData(format, images, options);
+      const result = await exportController.exportData(format, images, options);
 
       sendResponse({ success: true, result: result });
     } catch (error) {
@@ -447,8 +447,8 @@ export class MessageRouter {
   }
 
   handleGetStatus(message, sender, sendResponse) {
-    const stats = this.state.getStats();
-    const downloadStatus = this.downloads.getStatus();
+    const stats = stateManager.getStats();
+    const downloadStatus = downloadManager.getStatus();
 
     sendResponse({ 
       success: true, 
@@ -470,7 +470,7 @@ export class MessageRouter {
 
   async broadcastToTabs(message, tabId = null) {
     try {
-      const targetTabId = tabId || this.state.getCurrentTab();
+      const targetTabId = tabId || stateManager.getCurrentTab();
       if (targetTabId) {
         await this.sendTabMessageWithTimeout(targetTabId, message);
       }
@@ -481,7 +481,7 @@ export class MessageRouter {
 
   async handlePaginationPause(message, sender, sendResponse) {
     try {
-      this.state.setPaginationState(PAGINATION_STATES.PAUSED);
+      stateManager.setPaginationState(PAGINATION_STATES.PAUSED);
 
       await this.broadcastToTabs({
         type: MESSAGE_TYPES.CORE_PAGINATION_PAUSE
@@ -502,7 +502,7 @@ export class MessageRouter {
 
   async handlePaginationResume(message, sender, sendResponse) {
     try {
-      this.state.setPaginationState(PAGINATION_STATES.RUNNING);
+      stateManager.setPaginationState(PAGINATION_STATES.RUNNING);
 
       await this.broadcastToTabs({
         type: MESSAGE_TYPES.CORE_PAGINATION_RESUME
@@ -523,7 +523,7 @@ export class MessageRouter {
 
   async handlePaginationCancel(message, sender, sendResponse) {
     try {
-      this.state.setPaginationState(PAGINATION_STATES.CANCELLED);
+      stateManager.setPaginationState(PAGINATION_STATES.CANCELLED);
 
       await this.checkpointManager.clearCheckpoint();
 
@@ -695,5 +695,8 @@ export class MessageRouter {
     return false;
   }
 }
+
+// Export singleton instance
+export const messageRouter = new MessageRouter();
 
 export default MessageRouter;
