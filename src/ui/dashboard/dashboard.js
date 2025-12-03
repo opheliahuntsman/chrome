@@ -20,6 +20,12 @@ let serviceWorkerAvailable = true;
 const MESSAGE_TIMEOUT = 5000;
 const TAB_MESSAGE_TIMEOUT = 3000;
 
+function isChromeExtensionContext() {
+  return typeof chrome !== 'undefined' && 
+         chrome.runtime && 
+         chrome.runtime.sendMessage;
+}
+
 function sendMessageWithTimeout(message, timeout = MESSAGE_TIMEOUT) {
   return new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
@@ -159,7 +165,7 @@ function showServiceWorkerWarning() {
   const messageEl = document.getElementById('galleryMessage');
   if (messageEl) {
     messageEl.textContent = 'Extension is reconnecting... Please wait or reload the page.';
-    messageEl.style.color = '#ff9800';
+    messageEl.style.color = 'var(--warning, #ff9800)';
   }
   
   setTimeout(async () => {
@@ -423,7 +429,7 @@ function setupEventListeners() {
     }
 
     // Runtime message listener (only if Chrome extension API is available)
-    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+    if (isChromeExtensionContext()) {
       chrome.runtime.onMessage.addListener((message) => {
         if (message.type === 'gallery-status-update') {
           updateGalleryStatus(message.data);
