@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Gallery - StepGallery Extension Testing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #8b5cf6;
+      --accent: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --dark: #0f172a;
+      --dark-lighter: #1e293b;
+      --light: #f8fafc;
+      --gray: #64748b;
+      --gradient-main: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--light);
+      color: var(--dark);
+      min-height: 100vh;
+    }
+
+    .header {
+      background: var(--gradient-main);
+      color: white;
+      padding: 60px 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      opacity: 0.5;
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .header h1 {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 800;
+      margin-bottom: 15px;
+      letter-spacing: -1px;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .header p {
+      font-size: 1.25rem;
+      opacity: 0.9;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .back-link {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 50px;
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+
+    .back-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateX(-5px);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .instructions-panel {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      margin: -40px auto 40px;
+      max-width: 900px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+      position: relative;
+      z-index: 5;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .instructions-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .instructions-icon {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .instructions-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .instructions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    }
+
+    .instruction-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 15px;
+      background: var(--light);
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .instruction-item:hover {
+      background: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 100%);
+      transform: translateY(-2px);
+    }
+
+    .instruction-number {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .instruction-text {
+      font-size: 0.95rem;
+      color: var(--dark-lighter);
+      line-height: 1.5;
+    }
+
+    .controls-bar {
+      background: white;
+      border-radius: 16px;
+      padding: 20px 30px;
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .page-indicator {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .page-badge {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .page-info {
+      color: var(--gray);
+      font-size: 0.95rem;
+    }
+
+    .image-counter {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      background: var(--light);
+      border-radius: 12px;
+    }
+
+    .counter-icon {
+      font-size: 1.2rem;
+    }
+
+    .counter-text {
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .gallery-item {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    }
+
+    .gallery-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s ease;
+      z-index: 2;
+    }
+
+    .gallery-item:hover::before {
+      transform: scaleX(1);
+    }
+
+    .gallery-image-container {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 4/3;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .gallery-item:hover img {
+      transform: scale(1.1);
+    }
+
+    .gallery-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 50%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      display: flex;
+      align-items: flex-end;
+      padding: 20px;
+    }
+
+    .gallery-item:hover .gallery-overlay {
+      opacity: 1;
+    }
+
+    .overlay-content {
+      color: white;
+      width: 100%;
+    }
+
+    .overlay-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .overlay-meta {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    .gallery-info {
+      padding: 20px;
+    }
+
+    .gallery-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 8px;
+    }
+
+    .gallery-meta {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+
+    .meta-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: var(--light);
+      border-radius: 6px;
+      font-size: 0.8rem;
+    }
+
+    .pagination-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+
+    .pagination-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      background: white;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+      background: var(--primary);
+      color: white;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+    }
+
+    .pagination-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .pagination-btn.primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+    }
+
+    .pagination-btn.primary:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+    }
+
+    .page-dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .page-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ddd;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .page-dot.active {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      transform: scale(1.2);
+    }
+
+    .page-dot:hover:not(.active) {
+      background: var(--primary);
+      opacity: 0.5;
+    }
+
+    .load-more-section {
+      text-align: center;
+      padding: 40px 20px;
+      background: white;
+      border-radius: 20px;
+      margin-bottom: 40px;
+      border: 2px dashed #e0e0e0;
+    }
+
+    .load-more-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 10px;
+    }
+
+    .load-more-subtitle {
+      color: var(--gray);
+      margin-bottom: 20px;
+    }
+
+    .load-more-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 32px;
+      background: linear-gradient(135deg, var(--success), var(--accent));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    .load-more-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 15px 35px rgba(16, 185, 129, 0.3);
+    }
+
+    .stats-bar {
+      background: var(--dark);
+      color: white;
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 40px;
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 10px 30px;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 5px;
+    }
+
+    .footer {
+      background: var(--dark);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    .footer-content {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .footer-logo {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .footer-text {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.95rem;
+    }
+
+    .footer-link {
+      color: var(--primary);
+      text-decoration: none;
+      margin-top: 15px;
+      display: inline-block;
+      transition: color 0.3s ease;
+    }
+
+    .footer-link:hover {
+      color: var(--secondary);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .gallery-item {
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    .gallery-item:nth-child(1) { animation-delay: 0.05s; }
+    .gallery-item:nth-child(2) { animation-delay: 0.1s; }
+    .gallery-item:nth-child(3) { animation-delay: 0.15s; }
+    .gallery-item:nth-child(4) { animation-delay: 0.2s; }
+    .gallery-item:nth-child(5) { animation-delay: 0.25s; }
+    .gallery-item:nth-child(6) { animation-delay: 0.3s; }
+    .gallery-item:nth-child(7) { animation-delay: 0.35s; }
+    .gallery-item:nth-child(8) { animation-delay: 0.4s; }
+    .gallery-item:nth-child(9) { animation-delay: 0.45s; }
+    .gallery-item:nth-child(10) { animation-delay: 0.5s; }
+    .gallery-item:nth-child(11) { animation-delay: 0.55s; }
+    .gallery-item:nth-child(12) { animation-delay: 0.6s; }
+
+    @media (max-width: 768px) {
+      .header {
+        padding: 80px 20px 60px;
+      }
+
+      .back-link {
+        top: 15px;
+        left: 15px;
+        padding: 8px 15px;
+        font-size: 0.9rem;
+      }
+
+      .controls-bar {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .gallery {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 16px;
+      }
+
+      .pagination-controls {
+        flex-wrap: wrap;
+      }
+
+      .stats-bar {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .stat-item {
+        padding: 10px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="index.html" class="back-link">
+      <span>&#8592;</span> Back to Home
+    </a>
+    <div class="header-content">
+      <h1>Test Gallery</h1>
+      <p>Use this page to test all features of the StepGallery extension</p>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="instructions-panel">
+      <div class="instructions-header">
+        <div class="instructions-icon">&#128214;</div>
+        <h2 class="instructions-title">Testing Instructions</h2>
+      </div>
+      <div class="instructions-grid">
+        <div class="instruction-item">
+          <span class="instruction-number">1</span>
+          <span class="instruction-text">Install the StepGallery extension in Chrome</span>
+        </div>
+        <div class="instruction-item">
+          <span class="instruction-number">2</span>
+          <span class="instruction-text">Click the extension icon to open the side panel</span>
+        </div>
+        <div class="instruction-item">
+          <span class="instruction-number">3</span>
+          <span class="instruction-text">The panel should detect this gallery automatically</span>
+        </div>
+        <div class="instruction-item">
+          <span class="instruction-number">4</span>
+          <span class="instruction-text">Try different pagination methods</span>
+        </div>
+        <div class="instruction-item">
+          <span class="instruction-number">5</span>
+          <span class="instruction-text">Test the CSV export feature</span>
+        </div>
+        <div class="instruction-item">
+          <span class="instruction-number">6</span>
+          <span class="instruction-text">Try batch download with filename patterns</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-value" id="totalImages">60</div>
+        <div class="stat-label">Total Images</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="totalPages">5</div>
+        <div class="stat-label">Pages Available</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">12</div>
+        <div class="stat-label">Images Per Page</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">3</div>
+        <div class="stat-label">Pagination Methods</div>
+      </div>
+    </div>
+
+    <div class="controls-bar">
+      <div class="page-indicator">
+        <div class="page-badge">Page <span id="currentPage">1</span> of 5</div>
+        <span class="page-info">Showing images 1-12</span>
+      </div>
+      <div class="image-counter">
+        <span class="counter-icon">&#128444;</span>
+        <span class="counter-text"><span id="visibleCount">12</span> images visible</span>
+      </div>
+    </div>
+
+    <div class="gallery" id="gallery" role="list" aria-label="Image gallery">
+    </div>
+
+    <div class="pagination-controls">
+      <button id="prevBtn" class="pagination-btn" onclick="previousPage()" aria-label="Previous page">
+        <span>&#8592;</span> Previous
+      </button>
+      <div class="page-dots" id="pageDots" role="navigation" aria-label="Page navigation">
+      </div>
+      <button id="nextBtn" class="pagination-btn primary" onclick="nextPage()" aria-label="Next page">
+        Next <span>&#8594;</span>
+      </button>
+    </div>
+
+    <div class="load-more-section">
+      <h3 class="load-more-title">Want More Images?</h3>
+      <p class="load-more-subtitle">Click below to load additional images (tests "Load More" pagination)</p>
+      <button class="load-more-btn" onclick="loadMore()" aria-label="Load more images">
+        <span>&#43;</span> Load 6 More Images
+      </button>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-logo">
+        <span>&#127912;</span>
+        <span>StepGallery Test Gallery</span>
+      </div>
+      <p class="footer-text">Version 3.0.4 &copy; 2025</p>
+      <a href="index.html" class="footer-link">&#8592; Return to Home Page</a>
+    </div>
+  </footer>
+
+  <script>
+    let currentPage = 1;
+    const maxPages = 5;
+    const imagesPerPage = 12;
+    
+    const imageData = [
+      { title: 'Mountain Landscape', category: 'Nature', color: '#667eea' },
+      { title: 'Ocean Sunset', category: 'Nature', color: '#f093fb' },
+      { title: 'Forest Trail', category: 'Nature', color: '#10b981' },
+      { title: 'Desert Dunes', category: 'Nature', color: '#f59e0b' },
+      { title: 'Waterfall', category: 'Nature', color: '#06b6d4' },
+      { title: 'Northern Lights', category: 'Nature', color: '#8b5cf6' },
+      { title: 'City Skyline', category: 'Urban', color: '#64748b' },
+      { title: 'Street Photography', category: 'Urban', color: '#1e293b' },
+      { title: 'Architecture', category: 'Urban', color: '#0ea5e9' },
+      { title: 'Night City', category: 'Urban', color: '#6366f1' },
+      { title: 'Bridge', category: 'Urban', color: '#94a3b8' },
+      { title: 'Modern Building', category: 'Urban', color: '#4f46e5' }
+    ];
+
+    function generatePageDots() {
+      const dotsContainer = document.getElementById('pageDots');
+      dotsContainer.innerHTML = '';
+      
+      for (let i = 1; i <= maxPages; i++) {
+        const dot = document.createElement('button');
+        dot.className = 'page-dot' + (i === currentPage ? ' active' : '');
+        dot.setAttribute('aria-label', 'Go to page ' + i);
+        dot.onclick = () => goToPage(i);
+        dotsContainer.appendChild(dot);
+      }
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      generateImages(currentPage);
+      updatePageIndicator();
+      generatePageDots();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      const url = new URL(window.location);
+      url.searchParams.set('page', currentPage);
+      window.history.pushState({}, '', url);
+    }
+
+    function generateImages(page) {
+      const gallery = document.getElementById('gallery');
+      gallery.innerHTML = '';
+      
+      const startIndex = (page - 1) * imagesPerPage;
+      
+      for (let i = 0; i < imagesPerPage; i++) {
+        const imageIndex = (startIndex + i) % imageData.length;
+        const image = imageData[imageIndex];
+        const imgNumber = startIndex + i + 1;
+        
+        const item = document.createElement('article');
+        item.className = 'gallery-item';
+        item.setAttribute('role', 'listitem');
+        item.style.opacity = '0';
+        item.innerHTML = `
+          <div class="gallery-image-container">
+            <img src="https://picsum.photos/400/300?random=${imgNumber}" 
+                 alt="${image.title} - Image ${imgNumber}" 
+                 loading="lazy">
+            <div class="gallery-overlay">
+              <div class="overlay-content">
+                <div class="overlay-title">${image.title} #${imgNumber}</div>
+                <div class="overlay-meta">${image.category} | Page ${page}</div>
+              </div>
+            </div>
+          </div>
+          <div class="gallery-info">
+            <h3 class="gallery-title">${image.title} #${imgNumber}</h3>
+            <div class="gallery-meta">
+              <span class="meta-tag">
+                <span>&#128193;</span> ${image.category}
+              </span>
+              <span class="meta-tag">
+                <span>&#128247;</span> Image ${imgNumber}
+              </span>
+            </div>
+          </div>
+        `;
+        gallery.appendChild(item);
+        
+        setTimeout(() => {
+          item.style.opacity = '1';
+        }, i * 50);
+      }
+      
+      updateVisibleCount();
+    }
+
+    function updatePageIndicator() {
+      document.getElementById('currentPage').textContent = currentPage;
+      document.getElementById('prevBtn').disabled = currentPage === 1;
+      document.getElementById('nextBtn').disabled = currentPage === maxPages;
+      
+      const start = (currentPage - 1) * imagesPerPage + 1;
+      const end = currentPage * imagesPerPage;
+      document.querySelector('.page-info').textContent = `Showing images ${start}-${end}`;
+    }
+
+    function updateVisibleCount() {
+      const gallery = document.getElementById('gallery');
+      document.getElementById('visibleCount').textContent = gallery.children.length;
+    }
+
+    function nextPage() {
+      if (currentPage < maxPages) {
+        currentPage++;
+        generateImages(currentPage);
+        updatePageIndicator();
+        generatePageDots();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        const url = new URL(window.location);
+        url.searchParams.set('page', currentPage);
+        window.history.pushState({}, '', url);
+      }
+    }
+
+    function previousPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        generateImages(currentPage);
+        updatePageIndicator();
+        generatePageDots();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        const url = new URL(window.location);
+        url.searchParams.set('page', currentPage);
+        window.history.pushState({}, '', url);
+      }
+    }
+
+    function loadMore() {
+      const gallery = document.getElementById('gallery');
+      const currentCount = gallery.children.length;
+      
+      let lastItem = null;
+      for (let i = 0; i < 6; i++) {
+        const imageIndex = (currentCount + i) % imageData.length;
+        const image = imageData[imageIndex];
+        const imgNumber = currentCount + i + 1;
+        
+        const item = document.createElement('article');
+        item.className = 'gallery-item';
+        item.setAttribute('role', 'listitem');
+        item.style.opacity = '0';
+        item.innerHTML = `
+          <div class="gallery-image-container">
+            <img src="https://picsum.photos/400/300?random=${imgNumber + 1000}" 
+                 alt="${image.title} - Image ${imgNumber}" 
+                 loading="lazy">
+            <div class="gallery-overlay">
+              <div class="overlay-content">
+                <div class="overlay-title">${image.title} #${imgNumber}</div>
+                <div class="overlay-meta">${image.category} | Loaded More</div>
+              </div>
+            </div>
+          </div>
+          <div class="gallery-info">
+            <h3 class="gallery-title">${image.title} #${imgNumber}</h3>
+            <div class="gallery-meta">
+              <span class="meta-tag">
+                <span>&#128193;</span> ${image.category}
+              </span>
+              <span class="meta-tag">
+                <span>&#128247;</span> Image ${imgNumber}
+              </span>
+            </div>
+          </div>
+        `;
+        gallery.appendChild(item);
+        lastItem = item;
+        
+        setTimeout(() => {
+          item.style.opacity = '1';
+        }, i * 100);
+      }
+      
+      updateVisibleCount();
+      
+      if (lastItem) {
+        lastItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageParam = urlParams.get('page');
+    if (pageParam) {
+      currentPage = parseInt(pageParam);
+    }
+    
+    generateImages(currentPage);
+    updatePageIndicator();
+    generatePageDots();
+
+    window.addEventListener('popstate', function() {
+      const url = new URL(window.location);
+      const page = url.searchParams.get('page');
+      if (page) {
+        currentPage = parseInt(page);
+        generateImages(currentPage);
+        updatePageIndicator();
+        generatePageDots();
+      }
+    });
+  </script>
+</body>
+</html>

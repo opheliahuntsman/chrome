@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StepGallery - Professional Image Gallery Scraper for Chrome</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #8b5cf6;
+      --accent: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --dark: #0f172a;
+      --dark-lighter: #1e293b;
+      --light: #f8fafc;
+      --gray: #64748b;
+      --gradient-main: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      --gradient-card: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+      --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      --shadow-xl: 0 35px 60px -15px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: var(--dark);
+      background: var(--light);
+      overflow-x: hidden;
+    }
+
+    .hero {
+      min-height: 100vh;
+      background: var(--gradient-main);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      opacity: 0.5;
+    }
+
+    .floating-shapes {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      animation: float 20s infinite ease-in-out;
+    }
+
+    .shape:nth-child(1) {
+      width: 300px;
+      height: 300px;
+      top: -100px;
+      left: -100px;
+      animation-delay: 0s;
+    }
+
+    .shape:nth-child(2) {
+      width: 200px;
+      height: 200px;
+      top: 50%;
+      right: -50px;
+      animation-delay: -5s;
+    }
+
+    .shape:nth-child(3) {
+      width: 150px;
+      height: 150px;
+      bottom: 10%;
+      left: 10%;
+      animation-delay: -10s;
+    }
+
+    .shape:nth-child(4) {
+      width: 100px;
+      height: 100px;
+      top: 30%;
+      left: 60%;
+      animation-delay: -15s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25% { transform: translateY(-20px) rotate(5deg); }
+      50% { transform: translateY(0) rotate(0deg); }
+      75% { transform: translateY(20px) rotate(-5deg); }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 40px 20px;
+      max-width: 900px;
+    }
+
+    .logo-container {
+      margin-bottom: 30px;
+      animation: fadeInDown 1s ease-out;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100px;
+      height: 100px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      font-size: 50px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .hero-title {
+      font-size: clamp(3rem, 8vw, 5rem);
+      font-weight: 800;
+      color: white;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      animation: fadeInUp 1s ease-out 0.2s backwards;
+      letter-spacing: -2px;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1.1rem, 3vw, 1.5rem);
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 15px;
+      font-weight: 500;
+      animation: fadeInUp 1s ease-out 0.4s backwards;
+    }
+
+    .version-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      padding: 8px 20px;
+      border-radius: 50px;
+      color: white;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      animation: fadeInUp 1s ease-out 0.6s backwards;
+    }
+
+    .hero-description {
+      font-size: 1.15rem;
+      color: rgba(255, 255, 255, 0.85);
+      max-width: 700px;
+      margin: 0 auto 40px;
+      line-height: 1.8;
+      animation: fadeInUp 1s ease-out 0.8s backwards;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeInUp 1s ease-out 1s backwards;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 32px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 12px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-4px);
+    }
+
+    .scroll-indicator {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: bounce 2s infinite;
+    }
+
+    .scroll-indicator a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .scroll-arrow {
+      width: 30px;
+      height: 50px;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      border-radius: 15px;
+      position: relative;
+    }
+
+    .scroll-arrow::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 6px;
+      background: white;
+      border-radius: 50%;
+      animation: scrollDown 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-10px); }
+    }
+
+    @keyframes scrollDown {
+      0% { opacity: 1; top: 8px; }
+      100% { opacity: 0; top: 30px; }
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section {
+      padding: 100px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .section-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 6px 16px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      color: var(--dark);
+      margin-bottom: 20px;
+      letter-spacing: -1px;
+    }
+
+    .section-description {
+      font-size: 1.2rem;
+      color: var(--gray);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .alert-box {
+      background: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 100%);
+      border-radius: 16px;
+      padding: 24px 30px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 60px;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .alert-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .alert-content h4 {
+      color: var(--primary-dark);
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .alert-content p {
+      color: var(--dark-lighter);
+      font-size: 1rem;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+    }
+
+    .feature-card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .feature-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .feature-icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .feature-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 12px;
+    }
+
+    .feature-card p {
+      color: var(--gray);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    .install-section {
+      background: var(--dark);
+      color: white;
+    }
+
+    .install-section .section-title {
+      color: white;
+    }
+
+    .install-section .section-description {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .install-steps {
+      display: grid;
+      gap: 24px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .install-step {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      padding: 24px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .install-step:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateX(10px);
+    }
+
+    .step-number {
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .step-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .step-content p {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.95rem;
+    }
+
+    .step-content code {
+      background: rgba(99, 102, 241, 0.3);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 0.9rem;
+    }
+
+    .usage-section {
+      background: linear-gradient(180deg, var(--light) 0%, white 100%);
+    }
+
+    .usage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 40px;
+      align-items: center;
+    }
+
+    .usage-content h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 20px;
+    }
+
+    .usage-list {
+      list-style: none;
+    }
+
+    .usage-list li {
+      display: flex;
+      gap: 15px;
+      align-items: flex-start;
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .usage-list li:last-child {
+      border-bottom: none;
+    }
+
+    .usage-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--success), var(--accent));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1rem;
+    }
+
+    .usage-text {
+      font-size: 1rem;
+      color: var(--dark);
+    }
+
+    .usage-text strong {
+      color: var(--primary-dark);
+    }
+
+    .tokens-section {
+      background: white;
+    }
+
+    .tokens-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .token-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: var(--light);
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .token-item:hover {
+      background: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 100%);
+      transform: translateY(-2px);
+    }
+
+    .token-code {
+      font-family: 'SF Mono', Monaco, monospace;
+      background: var(--primary);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .token-desc {
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+
+    .cta-section {
+      background: var(--gradient-main);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .cta-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-title {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    .cta-description {
+      font-size: 1.2rem;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 40px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .footer {
+      background: var(--dark);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    .footer-content {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .footer-logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .footer-text {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.95rem;
+      margin-bottom: 20px;
+    }
+
+    .footer-badges {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .footer-badge {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    @media (max-width: 768px) {
+      .hero-content {
+        padding: 30px 20px;
+      }
+
+      .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .btn {
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
+      }
+
+      .alert-box {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .install-step {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .step-number {
+        margin: 0 auto;
+      }
+
+      .usage-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <div class="floating-shapes">
+      <div class="shape"></div>
+      <div class="shape"></div>
+      <div class="shape"></div>
+      <div class="shape"></div>
+    </div>
+    
+    <div class="hero-content">
+      <div class="logo-container">
+        <div class="logo">
+          <span role="img" aria-label="Gallery icon">&#127912;</span>
+        </div>
+      </div>
+      
+      <h1 class="hero-title">StepGallery</h1>
+      <p class="hero-subtitle">Professional Image Gallery Scraper for Chrome</p>
+      <span class="version-badge">Version 3.0.4 - MV3 Compliant</span>
+      
+      <p class="hero-description">
+        A powerful Chrome extension that intelligently detects, paginates, and exports image galleries. 
+        Built with privacy-first architecture and full Manifest V3 compliance for Chrome 2025.
+      </p>
+      
+      <div class="cta-buttons">
+        <a href="test-gallery.html" class="btn btn-primary">
+          <span>&#128444;</span> Try Test Gallery
+        </a>
+        <a href="README.md" class="btn btn-secondary">
+          <span>&#128214;</span> Documentation
+        </a>
+      </div>
+    </div>
+    
+    <div class="scroll-indicator">
+      <a href="#features">
+        <span>Explore Features</span>
+        <div class="scroll-arrow"></div>
+      </a>
+    </div>
+  </section>
+
+  <section id="features" class="section">
+    <div class="container">
+      <div class="alert-box">
+        <span class="alert-icon">&#128204;</span>
+        <div class="alert-content">
+          <h4>Chrome Extension</h4>
+          <p>This is a Chrome Extension project. Load it as an unpacked extension in Chrome to use all features. This demo site provides installation instructions and a test gallery.</p>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <span class="section-badge">Features</span>
+        <h2 class="section-title">Everything You Need</h2>
+        <p class="section-description">Powerful features designed for professionals who need efficient image gallery management.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon"><span>&#128260;</span></div>
+          <h3>Sequential Multi-Page</h3>
+          <p>Processes pages one at a time - scans, downloads all images, then automatically moves to the next page.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon"><span>&#9208;</span></div>
+          <h3>Pause & Resume</h3>
+          <p>Pause long operations anytime and resume from checkpoints saved every 5 pages. Never lose progress.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon"><span>&#9889;</span></div>
+          <h3>Adaptive Timing</h3>
+          <p>Dynamic wait times based on site speed. 40-60% faster on responsive sites, more reliable on slower ones.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon"><span>&#128190;</span></div>
+          <h3>Memory Monitor</h3>
+          <p>Automatic memory monitoring and pausing to prevent crashes when handling large galleries (5000+ images).</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon"><span>&#128276;</span></div>
+          <h3>Toast Notifications</h3>
+          <p>User-friendly error messages and visual feedback for all operations. No confusing technical errors.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon"><span>&#128196;</span></div>
+          <h3>7 Pagination Methods</h3>
+          <p>Next button, load more, infinite scroll, arrow navigation, URL patterns, API-based, and auto-detect.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon"><span>&#128202;</span></div>
+          <h3>CSV Export</h3>
+          <p>Export image data to CSV format for spreadsheets with customizable field selection.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon"><span>&#11015;</span></div>
+          <h3>Batch Downloads</h3>
+          <p>Download all images with custom filename patterns and concurrent download management.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon"><span>&#128274;</span></div>
+          <h3>Privacy First</h3>
+          <p>No external API calls, no tracking, no analytics. All processing happens locally in your browser.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon"><span>&#9989;</span></div>
+          <h3>MV3 Compliant</h3>
+          <p>Built for Chrome 2025 with Manifest V3 for future-proof compatibility and security.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section install-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Installation</span>
+        <h2 class="section-title">Quick Start Guide</h2>
+        <p class="section-description">Get up and running in less than a minute.</p>
+      </div>
+
+      <div class="install-steps">
+        <div class="install-step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>Download the Extension</h4>
+            <p>Download all files from this repository to your local machine.</p>
+          </div>
+        </div>
+        
+        <div class="install-step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>Open Chrome Extensions</h4>
+            <p>Navigate to <code>chrome://extensions/</code> in your Chrome browser.</p>
+          </div>
+        </div>
+        
+        <div class="install-step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>Enable Developer Mode</h4>
+            <p>Toggle the "Developer mode" switch in the top-right corner of the page.</p>
+          </div>
+        </div>
+        
+        <div class="install-step">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h4>Load Unpacked Extension</h4>
+            <p>Click "Load unpacked" and select the StepGallery folder containing <code>manifest.json</code>.</p>
+          </div>
+        </div>
+        
+        <div class="install-step">
+          <div class="step-number">5</div>
+          <div class="step-content">
+            <h4>Start Using</h4>
+            <p>The extension icon should appear in your toolbar. Click it to open the side panel!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section usage-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Usage</span>
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-description">Simple workflow for maximum productivity.</p>
+      </div>
+
+      <div class="usage-grid">
+        <div class="usage-content">
+          <h3>Basic Workflow</h3>
+          <ul class="usage-list">
+            <li>
+              <span class="usage-icon">1</span>
+              <span class="usage-text"><strong>Navigate</strong> to any webpage with an image gallery</span>
+            </li>
+            <li>
+              <span class="usage-icon">2</span>
+              <span class="usage-text"><strong>Click</strong> the StepGallery icon in your Chrome toolbar</span>
+            </li>
+            <li>
+              <span class="usage-icon">3</span>
+              <span class="usage-text"><strong>Review</strong> the gallery detection results in the side panel</span>
+            </li>
+            <li>
+              <span class="usage-icon">4</span>
+              <span class="usage-text"><strong>Select</strong> a pagination method or use "Auto-Detect"</span>
+            </li>
+            <li>
+              <span class="usage-icon">5</span>
+              <span class="usage-text"><strong>Start</strong> pagination to collect images across pages</span>
+            </li>
+            <li>
+              <span class="usage-icon">6</span>
+              <span class="usage-text"><strong>Export</strong> data or download all images</span>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="usage-content">
+          <h3>Pro Tips</h3>
+          <ul class="usage-list">
+            <li>
+              <span class="usage-icon">&#128161;</span>
+              <span class="usage-text">Use <strong>Auto-Detect</strong> for best results on most sites</span>
+            </li>
+            <li>
+              <span class="usage-icon">&#128161;</span>
+              <span class="usage-text">Increase <strong>pagination delay</strong> for slow-loading galleries</span>
+            </li>
+            <li>
+              <span class="usage-icon">&#128161;</span>
+              <span class="usage-text">Use <strong>batch confirmation</strong> for large downloads</span>
+            </li>
+            <li>
+              <span class="usage-icon">&#128161;</span>
+              <span class="usage-text">Pause anytime and <strong>resume from checkpoint</strong></span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section tokens-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Customization</span>
+        <h2 class="section-title">Filename Tokens</h2>
+        <p class="section-description">Customize your downloaded filenames with powerful tokens.</p>
+      </div>
+
+      <div class="tokens-grid">
+        <div class="token-item">
+          <span class="token-code">*num*</span>
+          <span class="token-desc">Image number (1, 2, 3...)</span>
+        </div>
+        <div class="token-item">
+          <span class="token-code">*num-3*</span>
+          <span class="token-desc">Padded number (001, 002...)</span>
+        </div>
+        <div class="token-item">
+          <span class="token-code">*name*</span>
+          <span class="token-desc">Original filename</span>
+        </div>
+        <div class="token-item">
+          <span class="token-code">*ext*</span>
+          <span class="token-desc">File extension</span>
+        </div>
+        <div class="token-item">
+          <span class="token-code">*date*</span>
+          <span class="token-desc">Current date</span>
+        </div>
+        <div class="token-item">
+          <span class="token-code">*time*</span>
+          <span class="token-desc">Current time</span>
+        </div>
+        <div class="token-item">
+          <span class="token-code">*page*</span>
+          <span class="token-desc">Page number</span>
+        </div>
+        <div class="token-item">
+          <span class="token-code">*caption*</span>
+          <span class="token-desc">Image caption/alt</span>
+        </div>
+        <div class="token-item">
+          <span class="token-code">*domain*</span>
+          <span class="token-desc">Website domain</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container">
+      <div class="cta-content">
+        <h2 class="cta-title">Ready to Try It?</h2>
+        <p class="cta-description">
+          Test the extension with our sample gallery page to see all features in action.
+        </p>
+        <div class="cta-buttons">
+          <a href="test-gallery.html" class="btn btn-primary">
+            <span>&#128444;</span> Open Test Gallery
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-logo">
+        <span>&#127912;</span>
+        <span>StepGallery</span>
+      </div>
+      <p class="footer-text">
+        Professional Image Gallery Management for Chrome<br>
+        Version 3.0.4 &copy; 2025
+      </p>
+      <div class="footer-badges">
+        <span class="footer-badge">Privacy-First</span>
+        <span class="footer-badge">MV3 Compliant</span>
+        <span class="footer-badge">Chrome 115+</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

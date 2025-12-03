@@ -1,0 +1,295 @@
+import { Logger } from '../shared/logger.js';
+import { FEATURES, MESSAGE_TYPES } from '../shared/constants.js';
+import { GalleryDetector } from './gallery-detector.js';
+import { ImageExtractor } from './image-extractor.js';
+import { PaginationEngine } from './pagination-engine.js';
+import { NetworkMonitor } from './network-monitor.js';
+import { ToastNotifier } from '../shared/toast-notifier.js';
+
+const contentLogger = new Logger('Content');
+
+let galleryDetector = null;
+let imageExtractor = null;
+let paginationEngine = null;
+let networkMonitor = null;
+let toastNotifier = null;
+
+function isExtensionContextValid() {
+  try {
+    return typeof chrome !== 'undefined' && 
+           chrome.runtime && 
+           typeof chrome.runtime.sendMessage === 'function';
+  } catch (e) {
+    return false;
+  }
+}
+
+function initialize() {
+  contentLogger.log('Initializing StepGallery content script');
+
+  if (!isExtensionContextValid()) {
+    contentLogger.warn('Extension context not available, skipping initialization');
+    return;
+  }
+
+  galleryDetector = new GalleryDetector();
+  imageExtractor = new ImageExtractor();
+  paginationEngine = new PaginationEngine();
+  networkMonitor = new NetworkMonitor();
+  toastNotifier = new ToastNotifier();
+
+  paginationEngine.setImageExtractor(imageExtractor);
+
+  try {
+    networkMonitor.inject();
+  } catch (error) {
+    contentLogger.debug('Network monitoring unavailable (CSP restriction). API pagination disabled.');
+  }
+
+  setTimeout(() => {
+    if (galleryDetector) {
+      galleryDetector.detectGallery();
+    }
+  }, 1000);
+
+  try {
+    if (isExtensionContextValid()) {
+      chrome.runtime.sendMessage({
+        type: MESSAGE_TYPES.CORE_INIT
+      }).catch(err => contentLogger.debug('Error sending init message:', err));
+    }
+  } catch (error) {
+    contentLogger.debug('Error sending init:', error);
+  }
+
+  setupMessageListeners();
+  
+  if (FEATURES.DEBUG_PANEL) {
+    loadDebugPanel();
+  }
+
+  contentLogger.log('StepGallery content script initialized');
+}
+
+function setupMessageListeners() {
+  if (!isExtensionContextValid()) {
+    contentLogger.warn('Extension context not available, skipping message listeners');
+    return;
+  }
+
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    contentLogger.debug('Received message:', message.type);
+
+    try {
+      if (message.type === MESSAGE_TYPES.CORE_PAGINATION_START) {
+        handlePaginationStart(message, sendResponse);
+        return true;
+      }
+
+      if (message.type === MESSAGE_TYPES.CORE_PAGINATION_STOP) {
+        handlePaginationStop(message, sendResponse);
+        return true;
+      }
+
+      if (message.type === MESSAGE_TYPES.CORE_PAGINATION_PAUSE) {
+        handlePaginationPause(message, sendResponse);
+        return true;
+      }
+
+      if (message.type === MESSAGE_TYPES.CORE_PAGINATION_RESUME) {
+        handlePaginationResume(message, sendResponse);
+        return true;
+      }
+
+      if (message.type === MESSAGE_TYPES.CORE_PAGINATION_CANCEL) {
+        handlePaginationCancel(message, sendResponse);
+        return true;
+      }
+
+      if (message.type === MESSAGE_TYPES.TOAST_SHOW) {
+        handleToastShow(message, sendResponse);
+        return true;
+      }
+
+      if (message.type === 'detect-gallery') {
+        handleDetectGallery(message, sendResponse);
+        return true;
+      }
+
+      if (message.type === 'extract-images') {
+        handleExtractImages(message, sendResponse);
+        return true;
+      }
+
+      if (message.type === 'get-pagination-info') {
+        handleGetPaginationInfo(message, sendResponse);
+        return true;
+      }
+
+      if (message.type === 'clear-data') {
+        handleClearData(message, sendResponse);
+        return true;
+      }
+    } catch (error) {
+      contentLogger.error('Error handling message:', error);
+      sendResponse({ success: false, error: error.message });
+    }
+
+    return false;
+  });
+}
+
+async function handlePaginationStart(message, sendResponse) {
+  try {
+    const method = message.method || message.data?.method || 'auto';
+    contentLogger.log(`Starting pagination with method: ${method}`);
+
+    const stored = await chrome.storage.local.get('settings');
+    if (stored.settings) {
+      paginationEngine.updateSettings(stored.settings);
+    }
+
+    imageExtractor.reset();
+    
+    // Use the new lazy loading approach for initial extraction
+    await imageExtractor.extractImagesWithLazyLoading({
+      scrollDelay: stored.settings?.scrollDelay || 500,
+      maxScrollSteps: 20
+    });
+
+    setTimeout(async () => {
+      await paginationEngine.start(method);
+    }, 500);
+
+    sendResponse({ success: true });
+  } catch (error) {
+    contentLogger.error('Error starting pagination:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+function handlePaginationStop(message, sendResponse) {
+  try {
+    contentLogger.log('Stopping pagination');
+    paginationEngine.stop();
+    sendResponse({ success: true });
+  } catch (error) {
+    contentLogger.error('Error stopping pagination:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+async function handlePaginationPause(message, sendResponse) {
+  try {
+    contentLogger.log('Pausing pagination');
+    await paginationEngine.pause();
+    sendResponse({ success: true });
+  } catch (error) {
+    contentLogger.error('Error pausing pagination:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+async function handlePaginationResume(message, sendResponse) {
+  try {
+    contentLogger.log('Resuming pagination');
+    await paginationEngine.resume();
+    sendResponse({ success: true });
+  } catch (error) {
+    contentLogger.error('Error resuming pagination:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+async function handlePaginationCancel(message, sendResponse) {
+  try {
+    contentLogger.log('Cancelling pagination');
+    await paginationEngine.cancel();
+    sendResponse({ success: true });
+  } catch (error) {
+    contentLogger.error('Error cancelling pagination:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+function handleToastShow(message, sendResponse) {
+  try {
+    const { message: toastMessage, type = 'info', duration } = message;
+    
+    if (!toastNotifier) {
+      toastNotifier = new ToastNotifier();
+    }
+    
+    toastNotifier.show(toastMessage, type, duration);
+    sendResponse({ success: true });
+  } catch (error) {
+    contentLogger.error('Error showing toast:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+async function handleDetectGallery(message, sendResponse) {
+  try {
+    const detection = await galleryDetector.detectGallery();
+    sendResponse({ success: true, detection: detection });
+  } catch (error) {
+    contentLogger.error('Error detecting gallery:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+async function handleExtractImages(message, sendResponse) {
+  try {
+    // Support both normal extraction and lazy loading extraction
+    const useLazyLoading = message.useLazyLoading !== false; // Default to true
+    
+    let images;
+    if (useLazyLoading) {
+      const stored = await chrome.storage.local.get('settings');
+      images = await imageExtractor.extractImagesWithLazyLoading({
+        scrollDelay: stored.settings?.scrollDelay || 500,
+        maxScrollSteps: 20
+      });
+    } else {
+      images = await imageExtractor.extractImages();
+    }
+    
+    sendResponse({ success: true, images: images });
+  } catch (error) {
+    contentLogger.error('Error extracting images:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+function handleGetPaginationInfo(message, sendResponse) {
+  try {
+    const paginationInfo = networkMonitor.getLatestPaginationInfo();
+    sendResponse({ success: true, paginationInfo: paginationInfo });
+  } catch (error) {
+    contentLogger.error('Error getting pagination info:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+function handleClearData(message, sendResponse) {
+  try {
+    imageExtractor.reset();
+    networkMonitor.clear();
+    paginationEngine.contentHasher.clear();
+    sendResponse({ success: true });
+  } catch (error) {
+    contentLogger.error('Error clearing data:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+function loadDebugPanel() {
+  contentLogger.log('Loading debug panel (dev mode)');
+  
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initialize);
+} else {
+  initialize();
+}

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Action Press Style Gallery Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .header {
+            background: #333;
+            color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .webshop {
+            display: flex;
+            gap: 20px;
+        }
+        .webshop-searchfilters {
+            width: 250px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .mediagroup {
+            flex: 1;
+        }
+        .mediagroup-controlarea {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .paging {
+            display: flex;
+            gap: 5px;
+        }
+        .paging-page {
+            list-style: none;
+        }
+        .paging-page a {
+            display: inline-block;
+            padding: 5px 10px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+        }
+        .paging-page a:hover {
+            background: #ccc;
+        }
+        .paging-page-prev a::before {
+            content: "← ";
+        }
+        .paging-page-next a::after {
+            content: " →";
+        }
+        .mediagroup-contents {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .media-item {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .media-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .media-item-medium {
+            position: relative;
+        }
+        .media-item-medium img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        .media-item-actionmenu {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            padding: 5px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .media-item:hover .media-item-actionmenu {
+            opacity: 1;
+        }
+        .media-actionmenu {
+            display: flex;
+            gap: 10px;
+            list-style: none;
+            justify-content: center;
+        }
+        .media-actionmenu a {
+            color: white;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .search-results-info {
+            margin-bottom: 15px;
+            color: #666;
+        }
+        .filter-group {
+            margin-bottom: 15px;
+        }
+        .filter-group h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .filter-group input[type="checkbox"] {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Action Press Style Gallery Test</h1>
+        <p>Test page for stock photo gallery scraping</p>
+    </header>
+
+    <div class="webshop">
+        <aside class="webshop-searchfilters">
+            <div class="filter-group">
+                <h3>Search Mode</h3>
+                <label><input type="radio" name="searchmode" value="NEW" checked> New search</label>
+                <label><input type="radio" name="searchmode" value="DEEP"> Search within results</label>
+            </div>
+            <div class="filter-group">
+                <h3>Media Type</h3>
+                <label><input type="checkbox" checked> Images</label>
+                <label><input type="checkbox"> Videos</label>
+                <label><input type="checkbox"> Illustrations</label>
+            </div>
+            <div class="filter-group">
+                <h3>Orientation</h3>
+                <label><input type="checkbox"> Horizontal</label>
+                <label><input type="checkbox"> Vertical</label>
+                <label><input type="checkbox"> Square</label>
+            </div>
+        </aside>
+
+        <main class="mediagroup">
+            <div class="mediagroup-controlarea mediagroup-controlarea-top">
+                <div class="search-results-info">
+                    Showing 1-20 of 150 results for "test gallery"
+                </div>
+                <ul class="paging">
+                    <li class="paging-page paging-page-prev">
+                        <a href="#" title="Previous page">Prev</a>
+                    </li>
+                    <li class="paging-page active">
+                        <a href="#">1</a>
+                    </li>
+                    <li class="paging-page">
+                        <a href="#">2</a>
+                    </li>
+                    <li class="paging-page">
+                        <a href="#">3</a>
+                    </li>
+                    <li class="paging-page paging-page-next">
+                        <a href="#" title="Next page">Next</a>
+                    </li>
+                </ul>
+            </div>
+
+            <ol class="mediagroup-contents mediagroup-contents-media">
+                <li class="media-item asset-medium" data-aspectratio="1.5" style="width: 280px;">
+                    <div class="media-item-medium" data-medianumber="10791001">
+                        <a href="/id/10791001">
+                            <img class="medium medium-10791001 medium-preview" 
+                                 alt="10791001" 
+                                 loading="lazy" 
+                                 src="https://picsum.photos/seed/10791001/280/187"
+                                 width="280" height="187">
+                        </a>
+                        <div class="media-item-actionmenu">
+                            <ul class="media-actionmenu">
+                                <li class="actionmenu-item preview"><a href="/id/10791001">Preview</a></li>
+                                <li class="actionmenu-item download"><a href="#">Download</a></li>
+                                <li class="actionmenu-item basket"><a href="#">Add to basket</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="media-item asset-medium" data-aspectratio="0.67" style="width: 180px;">
+                    <div class="media-item-medium" data-medianumber="10791002">
+                        <a href="/id/10791002">
+                            <img class="medium medium-10791002 medium-preview" 
+                                 alt="10791002" 
+                                 loading="lazy" 
+                                 src="https://picsum.photos/seed/10791002/180/270"
+                                 width="180" height="270">
+                        </a>
+                        <div class="media-item-actionmenu">
+                            <ul class="media-actionmenu">
+                                <li class="actionmenu-item preview"><a href="/id/10791002">Preview</a></li>
+                                <li class="actionmenu-item download"><a href="#">Download</a></li>
+                                <li class="actionmenu-item basket"><a href="#">Add to basket</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="media-item asset-medium" data-aspectratio="1.5" style="width: 280px;">
+                    <div class="media-item-medium" data-medianumber="10791003">
+                        <a href="/id/10791003">
+                            <img class="medium medium-10791003 medium-preview" 
+                                 alt="10791003" 
+                                 loading="lazy" 
+                                 src="https://picsum.photos/seed/10791003/280/187"
+                                 width="280" height="187">
+                        </a>
+                        <div class="media-item-actionmenu">
+                            <ul class="media-actionmenu">
+                                <li class="actionmenu-item preview"><a href="/id/10791003">Preview</a></li>
+                                <li class="actionmenu-item download"><a href="#">Download</a></li>
+                                <li class="actionmenu-item basket"><a href="#">Add to basket</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="media-item asset-medium" data-aspectratio="1.5" style="width: 280px;">
+                    <div class="media-item-medium" data-medianumber="10791004">
+                        <a href="/id/10791004">
+                            <img class="medium medium-10791004 medium-preview" 
+                                 alt="10791004" 
+                                 loading="lazy" 
+                                 src="https://picsum.photos/seed/10791004/280/187"
+                                 width="280" height="187">
+                        </a>
+                        <div class="media-item-actionmenu">
+                            <ul class="media-actionmenu">
+                                <li class="actionmenu-item preview"><a href="/id/10791004">Preview</a></li>
+                                <li class="actionmenu-item download"><a href="#">Download</a></li>
+                                <li class="actionmenu-item basket"><a href="#">Add to basket</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="media-item asset-medium" data-aspectratio="0.67" style="width: 180px;">
+                    <div class="media-item-medium" data-medianumber="10791005">
+                        <a href="/id/10791005">
+                            <img class="medium medium-10791005 medium-preview" 
+                                 alt="10791005" 
+                                 loading="lazy" 
+                                 src="https://picsum.photos/seed/10791005/180/270"
+                                 width="180" height="270">
+                        </a>
+                        <div class="media-item-actionmenu">
+                            <ul class="media-actionmenu">
+                                <li class="actionmenu-item preview"><a href="/id/10791005">Preview</a></li>
+                                <li class="actionmenu-item download"><a href="#">Download</a></li>
+                                <li class="actionmenu-item basket"><a href="#">Add to basket</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="media-item asset-medium" data-aspectratio="1.5" style="width: 280px;">
+                    <div class="media-item-medium" data-medianumber="10791006">
+                        <a href="/id/10791006">
+                            <img class="medium medium-10791006 medium-preview" 
+                                 alt="10791006" 
+                                 loading="lazy" 
+                                 src="https://picsum.photos/seed/10791006/280/187"
+                                 width="280" height="187">
+                        </a>
+                        <div class="media-item-actionmenu">
+                            <ul class="media-actionmenu">
+                                <li class="actionmenu-item preview"><a href="/id/10791006">Preview</a></li>
+                                <li class="actionmenu-item download"><a href="#">Download</a></li>
+                                <li class="actionmenu-item basket"><a href="#">Add to basket</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="media-item asset-medium" data-aspectratio="1.5" style="width: 280px;">
+                    <div class="media-item-medium" data-medianumber="10791007">
+                        <a href="/id/10791007">
+                            <img class="medium medium-10791007 medium-preview" 
+                                 alt="10791007" 
+                                 loading="lazy" 
+                                 src="https://picsum.photos/seed/10791007/280/187"
+                                 width="280" height="187">
+                        </a>
+                        <div class="media-item-actionmenu">
+                            <ul class="media-actionmenu">
+                                <li class="actionmenu-item preview"><a href="/id/10791007">Preview</a></li>
+                                <li class="actionmenu-item download"><a href="#">Download</a></li>
+                                <li class="actionmenu-item basket"><a href="#">Add to basket</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="media-item asset-medium" data-aspectratio="0.67" style="width: 180px;">
+                    <div class="media-item-medium" data-medianumber="10791008">
+                        <a href="/id/10791008">
+                            <img class="medium medium-10791008 medium-preview" 
+                                 alt="10791008" 
+                                 loading="lazy" 
+                                 src="https://picsum.photos/seed/10791008/180/270"
+                                 width="180" height="270">
+                        </a>
+                        <div class="media-item-actionmenu">
+                            <ul class="media-actionmenu">
+                                <li class="actionmenu-item preview"><a href="/id/10791008">Preview</a></li>
+                                <li class="actionmenu-item download"><a href="#">Download</a></li>
+                                <li class="actionmenu-item basket"><a href="#">Add to basket</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="media-item asset-medium" data-aspectratio="1.5" style="width: 280px;">
+                    <div class="media-item-medium" data-medianumber="10791009">
+                        <a href="/id/10791009">
+                            <img class="medium medium-10791009 medium-preview" 
+                                 alt="10791009" 
+                                 loading="lazy" 
+                                 src="https://picsum.photos/seed/10791009/280/187"
+                                 width="280" height="187">
+                        </a>
+                        <div class="media-item-actionmenu">
+                            <ul class="media-actionmenu">
+                                <li class="actionmenu-item preview"><a href="/id/10791009">Preview</a></li>
+                                <li class="actionmenu-item download"><a href="#">Download</a></li>
+                                <li class="actionmenu-item basket"><a href="#">Add to basket</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="media-item asset-medium" data-aspectratio="1.5" style="width: 280px;">
+                    <div class="media-item-medium" data-medianumber="10791010">
+                        <a href="/id/10791010">
+                            <img class="medium medium-10791010 medium-preview" 
+                                 alt="10791010" 
+                                 loading="lazy" 
+                                 src="https://picsum.photos/seed/10791010/280/187"
+                                 width="280" height="187">
+                        </a>
+                        <div class="media-item-actionmenu">
+                            <ul class="media-actionmenu">
+                                <li class="actionmenu-item preview"><a href="/id/10791010">Preview</a></li>
+                                <li class="actionmenu-item download"><a href="#">Download</a></li>
+                                <li class="actionmenu-item basket"><a href="#">Add to basket</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="media-item asset-medium" data-aspectratio="0.67" style="width: 180px;">
+                    <div class="media-item-medium" data-medianumber="10791011">
+                        <a href="/id/10791011">
+                            <img class="medium medium-10791011 medium-preview" 
+                                 alt="10791011" 
+                                 loading="lazy" 
+                                 src="https://picsum.photos/seed/10791011/180/270"
+                                 width="180" height="270">
+                        </a>
+                        <div class="media-item-actionmenu">
+                            <ul class="media-actionmenu">
+                                <li class="actionmenu-item preview"><a href="/id/10791011">Preview</a></li>
+                                <li class="actionmenu-item download"><a href="#">Download</a></li>
+                                <li class="actionmenu-item basket"><a href="#">Add to basket</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="media-item asset-medium" data-aspectratio="1.5" style="width: 280px;">
+                    <div class="media-item-medium" data-medianumber="10791012">
+                        <a href="/id/10791012">
+                            <img class="medium medium-10791012 medium-preview" 
+                                 alt="10791012" 
+                                 loading="lazy" 
+                                 src="https://picsum.photos/seed/10791012/280/187"
+                                 width="280" height="187">
+                        </a>
+                        <div class="media-item-actionmenu">
+                            <ul class="media-actionmenu">
+                                <li class="actionmenu-item preview"><a href="/id/10791012">Preview</a></li>
+                                <li class="actionmenu-item download"><a href="#">Download</a></li>
+                                <li class="actionmenu-item basket"><a href="#">Add to basket</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+            </ol>
+
+            <div class="mediagroup-controlarea mediagroup-controlarea-bottom">
+                <div class="search-results-info">
+                    Page 1 of 8
+                </div>
+                <ul class="paging">
+                    <li class="paging-page paging-page-prev">
+                        <a href="#" title="Previous page">Prev</a>
+                    </li>
+                    <li class="paging-page active">
+                        <a href="#">1</a>
+                    </li>
+                    <li class="paging-page">
+                        <a href="#">2</a>
+                    </li>
+                    <li class="paging-page">
+                        <a href="#">3</a>
+                    </li>
+                    <li class="paging-page paging-page-next">
+                        <a href="#" title="Next page">Next</a>
+                    </li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        console.log('Action Press Style Test Page Loaded');
+        console.log('Media items found:', document.querySelectorAll('.media-item').length);
+        console.log('Images with data-medianumber:', document.querySelectorAll('[data-medianumber]').length);
+        
+        const mediaNumbers = [];
+        document.querySelectorAll('[data-medianumber]').forEach(el => {
+            mediaNumbers.push(el.dataset.medianumber);
+        });
+        console.log('Media numbers:', mediaNumbers);
+    </script>
+</body>
+</html>
