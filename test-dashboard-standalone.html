@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StepGallery Dashboard Test (Standalone)</title>
+  <link rel="stylesheet" href="src/ui/dashboard/dashboard.css">
+</head>
+<body>
+  <div class="dashboard" role="main">
+    <header class="header" role="banner">
+      <h1 aria-label="StepGallery Application">&#127912; StepGallery</h1>
+      <p class="version">v3.0.4</p>
+    </header>
+
+    <section class="gallery-status" aria-labelledby="gallery-detection-heading">
+      <h2 id="gallery-detection-heading">&#128269; Gallery Detection</h2>
+      <div id="galleryStatus" class="status-box" role="status" aria-live="polite">
+        <p id="galleryMessage">Analyzing page...</p>
+        <div class="status-details">
+          <span id="galleryType" aria-label="Gallery type"></span>
+          <span id="imageCount" aria-label="Image count"></span>
+          <span id="confidence" aria-label="Detection confidence"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="pagination-section" aria-labelledby="pagination-heading">
+      <h2 id="pagination-heading">&#128260; Pagination Control</h2>
+      
+      <div class="control-group">
+        <label for="paginationMethod">Method:</label>
+        <select id="paginationMethod" aria-describedby="pagination-method-desc">
+          <option value="auto">Auto-Detect</option>
+          <option value="nextButton">Next Button</option>
+          <option value="loadMore">Load More</option>
+        </select>
+        <p id="pagination-method-desc" class="help-text">Choose how the extension navigates between pages</p>
+      </div>
+
+      <div class="control-group">
+        <label for="paginationDelay">Wait Before Next Page (seconds):</label>
+        <input type="number" id="paginationDelay" min="0" max="30" step="0.5" value="2" 
+               aria-describedby="pagination-delay-desc" title="Seconds to wait after clicking next/load more button">
+        <p id="pagination-delay-desc" class="help-text">Time to wait after clicking/loading before proceeding to next page</p>
+      </div>
+
+      <div class="control-group">
+        <label for="scrollDelay">Scroll Delay (milliseconds):</label>
+        <input type="number" id="scrollDelay" min="0" max="5000" step="100" value="500" 
+               aria-describedby="scroll-delay-desc" title="Milliseconds to wait after scrolling (for lazy loading)">
+        <p id="scroll-delay-desc" class="help-text">Delay between scroll actions during pagination</p>
+      </div>
+
+      <div class="button-group" role="group" aria-label="Pagination controls">
+        <button id="startPagination" class="btn btn-primary" aria-label="Start pagination">&#9654; Start Pagination</button>
+        <button id="stopPagination" class="btn btn-secondary" aria-label="Stop pagination">&#9209; Stop</button>
+      </div>
+    </section>
+
+    <section class="images-section" aria-labelledby="collected-images-heading">
+      <h2 id="collected-images-heading">&#128444; Collected Images</h2>
+      <div class="image-stats">
+        <span id="totalImages" role="status" aria-live="polite">0 images</span>
+        <button id="clearImages" class="btn btn-small btn-secondary" aria-label="Clear all collected images">Clear All</button>
+      </div>
+      
+      <div id="imageGrid" class="image-grid" role="list" aria-label="Collected images grid"></div>
+    </section>
+
+    <section class="export-section" aria-labelledby="export-heading">
+      <h2 id="export-heading">&#128202; Export Options</h2>
+      <button id="exportAllFormats" class="btn btn-primary btn-large" aria-label="Export collected images to CSV">&#128202; Export to CSV</button>
+    </section>
+
+    <section class="download-section" aria-labelledby="download-heading">
+      <h2 id="download-heading">&#11015; Batch Download</h2>
+      
+      <div class="control-group">
+        <label for="filenamePattern">Filename Pattern:</label>
+        <input type="text" id="filenamePattern" value="*num-3*-*name*.*ext*" class="input-full"
+               aria-describedby="filename-pattern-desc">
+        <p id="filename-pattern-desc" class="help-text">Example: <span id="filenameExample">001-sunset.jpg</span></p>
+      </div>
+
+      <div class="control-group">
+        <label for="downloadFolder">Download Subfolder (optional):</label>
+        <input type="text" id="downloadFolder" placeholder="e.g., gallery-images" class="input-full" 
+               aria-describedby="download-folder-desc" title="Subfolder name within Downloads directory">
+        <p id="download-folder-desc" class="help-text">Specify a subfolder within Downloads. Leave empty for Downloads root</p>
+      </div>
+
+      <div class="control-group">
+        <label for="concurrentDownloads">Concurrent Downloads: <span id="concurrentValue">3</span></label>
+        <input type="number" id="concurrentDownloads" min="1" max="10" value="3" 
+               aria-describedby="concurrent-desc" title="Number of simultaneous downloads (1-10)">
+        <p id="concurrent-desc" class="help-text">Number of simultaneous downloads (1-10)</p>
+      </div>
+
+      <div class="control-group">
+        <label for="downloadDelay">Delay Between Downloads (seconds):</label>
+        <input type="number" id="downloadDelay" min="0" max="60" step="0.5" value="0" 
+               aria-describedby="download-delay-desc" title="Seconds to wait between each file download">
+        <p id="download-delay-desc" class="help-text">Wait time between each file download (0 = no delay)</p>
+      </div>
+
+      <div class="control-group">
+        <label for="batchSize">Batch Confirmation Size:</label>
+        <input type="number" id="batchSize" min="0" max="1000" step="10" value="0" 
+               aria-describedby="batch-size-desc" title="Pause after N downloads for confirmation (0=disabled)">
+        <p id="batch-size-desc" class="help-text">Pause and confirm after this many downloads (0 = disabled)</p>
+      </div>
+
+      <button id="downloadImages" class="btn btn-primary btn-large" aria-label="Download all collected images">&#11015; Download All Images</button>
+
+      <button id="helpToggle" class="help-toggle" aria-expanded="false" aria-controls="helpSection">&#128214; Show Help & Token Reference</button>
+    </section>
+
+    <section class="reset-section" aria-labelledby="reset-heading">
+      <h2 id="reset-heading" class="hidden">Reset Settings</h2>
+      <button id="resetSettings" class="btn btn-reset" aria-label="Reset all settings to default values">&#9888; Reset All Settings to Defaults</button>
+    </section>
+
+    <footer class="footer" role="contentinfo">
+      <p>StepGallery &copy; 2025 | Privacy-First | MV3 Compliant</p>
+    </footer>
+  </div>
+
+  <div id="toast-container" role="alert" aria-live="assertive" aria-atomic="true"></div>
+
+  <script>
+    // Mock Chrome APIs for standalone testing
+    if (typeof chrome === 'undefined') {
+      window.chrome = {
+        runtime: {
+          sendMessage: function(message, callback) {
+            console.log('Mock sendMessage:', message);
+            if (callback) callback({ success: false, error: 'Standalone mode - no extension' });
+          },
+          onMessage: {
+            addListener: function(callback) {
+              console.log('Mock onMessage listener added');
+            }
+          },
+          lastError: null
+        },
+        tabs: {
+          query: function(queryInfo, callback) {
+            console.log('Mock tabs.query:', queryInfo);
+            if (callback) callback([]);
+          },
+          sendMessage: function(tabId, message, callback) {
+            console.log('Mock tabs.sendMessage:', tabId, message);
+            if (callback) callback({ success: false });
+          }
+        }
+      };
+    }
+  </script>
+  <script src="src/ui/dashboard/dashboard.js" type="module"></script>
+  
+  <script>
+    // Test UI interaction after a delay
+    setTimeout(() => {
+      console.log('Testing UI interaction...');
+      
+      // Test if inputs are enabled
+      const inputs = document.querySelectorAll('input, select, button');
+      let enabledCount = 0;
+      let totalCount = inputs.length;
+      
+      inputs.forEach(input => {
+        if (!input.disabled && !input.hasAttribute('disabled')) {
+          enabledCount++;
+        }
+      });
+      
+      console.log(`✓ UI Test Results: ${enabledCount}/${totalCount} interactive elements are enabled`);
+      
+      if (enabledCount === totalCount) {
+        document.getElementById('galleryMessage').textContent = '✓ UI Test PASSED: All elements are interactive!';
+        document.getElementById('galleryMessage').style.color = 'green';
+      } else {
+        document.getElementById('galleryMessage').textContent = `⚠ UI Test WARNING: Only ${enabledCount}/${totalCount} elements enabled`;
+        document.getElementById('galleryMessage').style.color = 'orange';
+      }
+    }, 2000);
+  </script>
+</body>
+</html>
