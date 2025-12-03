@@ -5,6 +5,29 @@ import { ToastNotifier } from '../../shared/toast-notifier.js';
 const filenameGenerator = new FilenameGenerator();
 const toast = new ToastNotifier();
 
+// Global error handlers to prevent UI freeze
+let lastErrorTime = 0;
+const ERROR_DEBOUNCE_MS = 1000; // Only re-enable UI once per second
+
+window.addEventListener('error', (event) => {
+  console.error('Global error caught:', event.error);
+  // Ensure UI remains interactive even after errors (debounced)
+  const now = Date.now();
+  if (now - lastErrorTime > ERROR_DEBOUNCE_MS) {
+    lastErrorTime = now;
+    try {
+      enableUIInteraction();
+    } catch (e) {
+      console.error('Failed to enable UI interaction:', e);
+    }
+  }
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+  event.preventDefault();
+});
+
 let collectedImages = [];
 let isPaginating = false;
 let settings = {
@@ -89,16 +112,30 @@ async function initializeDashboard() {
 
   console.log('Dashboard initializing...');
 
+  // Always enable UI first to prevent freeze
+  try {
+    enableUIInteraction();
+  } catch (error) {
+    console.error('Error enabling UI interaction:', error);
+  }
+
   try {
     toast.initialize();
   } catch (error) {
     console.error('Error initializing toast:', error);
   }
   
-  initializeUI();
-  setupEventListeners();
+  try {
+    initializeUI();
+  } catch (error) {
+    console.error('Error initializing UI:', error);
+  }
   
-  enableUIInteraction();
+  try {
+    setupEventListeners();
+  } catch (error) {
+    console.error('Error setting up event listeners:', error);
+  }
 
   try {
     const isAvailable = await checkServiceWorkerStatus();
@@ -190,27 +227,37 @@ async function loadImages() {
 }
 
 function applySettings() {
-  document.getElementById('paginationMethod').value = settings.paginationMethod;
-  document.getElementById('filenamePattern').value = settings.filenamePattern;
+  const paginationMethod = document.getElementById('paginationMethod');
+  if (paginationMethod) paginationMethod.value = settings.paginationMethod;
+  
+  const filenamePattern = document.getElementById('filenamePattern');
+  if (filenamePattern) filenamePattern.value = settings.filenamePattern;
   
   if (settings.paginationDelay !== undefined) {
-    document.getElementById('paginationDelay').value = settings.paginationDelay;
+    const paginationDelay = document.getElementById('paginationDelay');
+    if (paginationDelay) paginationDelay.value = settings.paginationDelay;
   }
   if (settings.scrollDelay !== undefined) {
-    document.getElementById('scrollDelay').value = settings.scrollDelay;
+    const scrollDelay = document.getElementById('scrollDelay');
+    if (scrollDelay) scrollDelay.value = settings.scrollDelay;
   }
   if (settings.concurrentDownloads !== undefined) {
-    document.getElementById('concurrentDownloads').value = settings.concurrentDownloads;
-    document.getElementById('concurrentValue').textContent = settings.concurrentDownloads;
+    const concurrentDownloads = document.getElementById('concurrentDownloads');
+    const concurrentValue = document.getElementById('concurrentValue');
+    if (concurrentDownloads) concurrentDownloads.value = settings.concurrentDownloads;
+    if (concurrentValue) concurrentValue.textContent = settings.concurrentDownloads;
   }
   if (settings.downloadDelay !== undefined) {
-    document.getElementById('downloadDelay').value = settings.downloadDelay;
+    const downloadDelay = document.getElementById('downloadDelay');
+    if (downloadDelay) downloadDelay.value = settings.downloadDelay;
   }
   if (settings.batchSize !== undefined) {
-    document.getElementById('batchSize').value = settings.batchSize;
+    const batchSize = document.getElementById('batchSize');
+    if (batchSize) batchSize.value = settings.batchSize;
   }
   if (settings.downloadFolder !== undefined) {
-    document.getElementById('downloadFolder').value = settings.downloadFolder;
+    const downloadFolder = document.getElementById('downloadFolder');
+    if (downloadFolder) downloadFolder.value = settings.downloadFolder;
   }
   
   updateFilenameExample();
@@ -221,60 +268,82 @@ function initializeUI() {
   updateFilenameExample();
 }
 
-function setupEventListeners() {
-  document.getElementById('startPagination').addEventListener('click', startPagination);
-  document.getElementById('pausePagination').addEventListener('click', pausePagination);
-  document.getElementById('resumePagination').addEventListener('click', resumePagination);
-  document.getElementById('cancelPagination').addEventListener('click', cancelPagination);
-  document.getElementById('stopPagination').addEventListener('click', stopPagination);
-  document.getElementById('clearImages').addEventListener('click', clearImages);
-  document.getElementById('exportAllFormats').addEventListener('click', exportAllFormats);
-  document.getElementById('downloadImages').addEventListener('click', downloadAllImages);
+function safeAddEventListener(elementId, event, handler) {
+  const element = document.getElementById(elementId);
+  if (element) {
+    element.addEventListener(event, handler);
+  } else {
+    console.warn(`Element with id '${elementId}' not found`);
+  }
+}
 
-  document.getElementById('paginationMethod').addEventListener('change', (e) => {
+function safeAddEventListenerToAll(selector, event, handler, suppressWarning = false) {
+  const elements = document.querySelectorAll(selector);
+  if (elements.length > 0) {
+    elements.forEach(element => {
+      element.addEventListener(event, handler);
+    });
+  } else if (!suppressWarning) {
+    console.warn(`No elements found for selector '${selector}'`);
+  }
+}
+
+function setupEventListeners() {
+  safeAddEventListener('startPagination', 'click', startPagination);
+  safeAddEventListener('pausePagination', 'click', pausePagination);
+  safeAddEventListener('resumePagination', 'click', resumePagination);
+  safeAddEventListener('cancelPagination', 'click', cancelPagination);
+  safeAddEventListener('stopPagination', 'click', stopPagination);
+  safeAddEventListener('clearImages', 'click', clearImages);
+  safeAddEventListener('exportAllFormats', 'click', exportAllFormats);
+  safeAddEventListener('downloadImages', 'click', downloadAllImages);
+
+  safeAddEventListener('paginationMethod', 'change', (e) => {
     settings.paginationMethod = e.target.value;
     saveSettings();
   });
 
-  document.querySelectorAll('.token-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const input = document.getElementById('filenamePattern');
+  safeAddEventListenerToAll('.token-btn', 'click', (event) => {
+    const btn = event.currentTarget;
+    const input = document.getElementById('filenamePattern');
+    if (input) {
       input.value += btn.dataset.token;
       settings.filenamePattern = input.value;
       updateFilenameExample();
       saveSettings();
-    });
+    }
   });
 
-  document.getElementById('paginationDelay').addEventListener('input', (e) => {
+  safeAddEventListener('paginationDelay', 'input', (e) => {
     settings.paginationDelay = parseFloat(e.target.value) || 0;
     saveSettings();
   });
 
-  document.getElementById('scrollDelay').addEventListener('input', (e) => {
+  safeAddEventListener('scrollDelay', 'input', (e) => {
     settings.scrollDelay = parseInt(e.target.value) || 0;
     saveSettings();
   });
 
-  document.getElementById('concurrentDownloads').addEventListener('input', (e) => {
+  safeAddEventListener('concurrentDownloads', 'input', (e) => {
     const value = parseInt(e.target.value) || 1;
     settings.concurrentDownloads = Math.max(1, Math.min(10, value));
-    document.getElementById('concurrentValue').textContent = settings.concurrentDownloads;
+    const concurrentValue = document.getElementById('concurrentValue');
+    if (concurrentValue) concurrentValue.textContent = settings.concurrentDownloads;
     e.target.value = settings.concurrentDownloads;
     saveSettings();
   });
 
-  document.getElementById('downloadDelay').addEventListener('input', (e) => {
+  safeAddEventListener('downloadDelay', 'input', (e) => {
     settings.downloadDelay = parseFloat(e.target.value) || 0;
     saveSettings();
   });
 
-  document.getElementById('batchSize').addEventListener('input', (e) => {
+  safeAddEventListener('batchSize', 'input', (e) => {
     settings.batchSize = parseInt(e.target.value) || 0;
     saveSettings();
   });
 
-  document.getElementById('downloadFolder').addEventListener('input', (e) => {
+  safeAddEventListener('downloadFolder', 'input', (e) => {
     const folder = e.target.value.trim();
     settings.downloadFolder = folder;
     validateFolderPath(folder);
@@ -290,20 +359,22 @@ function setupEventListeners() {
 
   numericInputs.forEach(({ id, min, max }) => {
     const input = document.getElementById(id);
-    input.addEventListener('blur', (e) => {
-      validateNumericInput(e.target, min, max);
-    });
-    input.addEventListener('input', (e) => {
-      const value = parseFloat(e.target.value);
-      if (value < min || value > max) {
-        e.target.classList.add('input-invalid');
-      } else {
-        e.target.classList.remove('input-invalid');
-      }
-    });
+    if (input) {
+      input.addEventListener('blur', (e) => {
+        validateNumericInput(e.target, min, max);
+      });
+      input.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value);
+        if (value < min || value > max) {
+          e.target.classList.add('input-invalid');
+        } else {
+          e.target.classList.remove('input-invalid');
+        }
+      });
+    }
   });
 
-  document.getElementById('filenamePattern').addEventListener('input', (e) => {
+  safeAddEventListener('filenamePattern', 'input', (e) => {
     const pattern = e.target.value;
     settings.filenamePattern = pattern;
     validateFilenamePattern(pattern);
@@ -311,9 +382,9 @@ function setupEventListeners() {
     saveSettings();
   });
 
-  document.getElementById('helpToggle').addEventListener('click', toggleHelpSection);
+  safeAddEventListener('helpToggle', 'click', toggleHelpSection);
 
-  document.getElementById('resetSettings').addEventListener('click', resetToDefaults);
+  safeAddEventListener('resetSettings', 'click', resetToDefaults);
 
   chrome.runtime.onMessage.addListener((message) => {
     if (message.type === 'gallery-status-update') {

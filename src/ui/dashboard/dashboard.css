@@ -76,6 +76,16 @@ body {
   background: var(--bg-primary);
   position: relative;
   z-index: 1;
+  pointer-events: auto !important;
+}
+
+/* Ensure interactive elements are clickable */
+.dashboard button,
+.dashboard input,
+.dashboard select,
+.dashboard a,
+.dashboard label {
+  pointer-events: auto;
 }
 
 .header {
