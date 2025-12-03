@@ -95,11 +95,27 @@ async function initializeDashboard() {
     console.error('Error initializing toast:', error);
   }
   
-  initializeUI();
-  setupEventListeners();
+  try {
+    initializeUI();
+  } catch (error) {
+    console.error('Error initializing UI:', error);
+  }
   
-  enableUIInteraction();
+  try {
+    setupEventListeners();
+  } catch (error) {
+    console.error('Error setting up event listeners:', error);
+  }
+  
+  // Always enable UI interaction, even if previous steps failed
+  try {
+    enableUIInteraction();
+    console.log('UI interaction enabled');
+  } catch (error) {
+    console.error('Error enabling UI interaction:', error);
+  }
 
+  // Async initialization - failures here should not block UI
   try {
     const isAvailable = await checkServiceWorkerStatus();
     
@@ -190,27 +206,60 @@ async function loadImages() {
 }
 
 function applySettings() {
-  document.getElementById('paginationMethod').value = settings.paginationMethod;
-  document.getElementById('filenamePattern').value = settings.filenamePattern;
+  const paginationMethodEl = document.getElementById('paginationMethod');
+  if (paginationMethodEl) {
+    paginationMethodEl.value = settings.paginationMethod;
+  }
+  
+  const filenamePatternEl = document.getElementById('filenamePattern');
+  if (filenamePatternEl) {
+    filenamePatternEl.value = settings.filenamePattern;
+  }
   
   if (settings.paginationDelay !== undefined) {
-    document.getElementById('paginationDelay').value = settings.paginationDelay;
+    const paginationDelayEl = document.getElementById('paginationDelay');
+    if (paginationDelayEl) {
+      paginationDelayEl.value = settings.paginationDelay;
+    }
   }
+  
   if (settings.scrollDelay !== undefined) {
-    document.getElementById('scrollDelay').value = settings.scrollDelay;
+    const scrollDelayEl = document.getElementById('scrollDelay');
+    if (scrollDelayEl) {
+      scrollDelayEl.value = settings.scrollDelay;
+    }
   }
+  
   if (settings.concurrentDownloads !== undefined) {
-    document.getElementById('concurrentDownloads').value = settings.concurrentDownloads;
-    document.getElementById('concurrentValue').textContent = settings.concurrentDownloads;
+    const concurrentDownloadsEl = document.getElementById('concurrentDownloads');
+    if (concurrentDownloadsEl) {
+      concurrentDownloadsEl.value = settings.concurrentDownloads;
+    }
+    const concurrentValueEl = document.getElementById('concurrentValue');
+    if (concurrentValueEl) {
+      concurrentValueEl.textContent = settings.concurrentDownloads;
+    }
   }
+  
   if (settings.downloadDelay !== undefined) {
-    document.getElementById('downloadDelay').value = settings.downloadDelay;
+    const downloadDelayEl = document.getElementById('downloadDelay');
+    if (downloadDelayEl) {
+      downloadDelayEl.value = settings.downloadDelay;
+    }
   }
+  
   if (settings.batchSize !== undefined) {
-    document.getElementById('batchSize').value = settings.batchSize;
+    const batchSizeEl = document.getElementById('batchSize');
+    if (batchSizeEl) {
+      batchSizeEl.value = settings.batchSize;
+    }
   }
+  
   if (settings.downloadFolder !== undefined) {
-    document.getElementById('downloadFolder').value = settings.downloadFolder;
+    const downloadFolderEl = document.getElementById('downloadFolder');
+    if (downloadFolderEl) {
+      downloadFolderEl.value = settings.downloadFolder;
+    }
   }
   
   updateFilenameExample();
@@ -222,129 +271,194 @@ function initializeUI() {
 }
 
 function setupEventListeners() {
-  document.getElementById('startPagination').addEventListener('click', startPagination);
-  document.getElementById('pausePagination').addEventListener('click', pausePagination);
-  document.getElementById('resumePagination').addEventListener('click', resumePagination);
-  document.getElementById('cancelPagination').addEventListener('click', cancelPagination);
-  document.getElementById('stopPagination').addEventListener('click', stopPagination);
-  document.getElementById('clearImages').addEventListener('click', clearImages);
-  document.getElementById('exportAllFormats').addEventListener('click', exportAllFormats);
-  document.getElementById('downloadImages').addEventListener('click', downloadAllImages);
+  try {
+    // Button event listeners
+    const startPaginationBtn = document.getElementById('startPagination');
+    if (startPaginationBtn) startPaginationBtn.addEventListener('click', startPagination);
+    
+    const pausePaginationBtn = document.getElementById('pausePagination');
+    if (pausePaginationBtn) pausePaginationBtn.addEventListener('click', pausePagination);
+    
+    const resumePaginationBtn = document.getElementById('resumePagination');
+    if (resumePaginationBtn) resumePaginationBtn.addEventListener('click', resumePagination);
+    
+    const cancelPaginationBtn = document.getElementById('cancelPagination');
+    if (cancelPaginationBtn) cancelPaginationBtn.addEventListener('click', cancelPagination);
+    
+    const stopPaginationBtn = document.getElementById('stopPagination');
+    if (stopPaginationBtn) stopPaginationBtn.addEventListener('click', stopPagination);
+    
+    const clearImagesBtn = document.getElementById('clearImages');
+    if (clearImagesBtn) clearImagesBtn.addEventListener('click', clearImages);
+    
+    const exportAllFormatsBtn = document.getElementById('exportAllFormats');
+    if (exportAllFormatsBtn) exportAllFormatsBtn.addEventListener('click', exportAllFormats);
+    
+    const downloadImagesBtn = document.getElementById('downloadImages');
+    if (downloadImagesBtn) downloadImagesBtn.addEventListener('click', downloadAllImages);
 
-  document.getElementById('paginationMethod').addEventListener('change', (e) => {
-    settings.paginationMethod = e.target.value;
-    saveSettings();
-  });
+    // Dropdown event listeners
+    const paginationMethodSelect = document.getElementById('paginationMethod');
+    if (paginationMethodSelect) {
+      paginationMethodSelect.addEventListener('change', (e) => {
+        settings.paginationMethod = e.target.value;
+        saveSettings();
+      });
+    }
 
-  document.querySelectorAll('.token-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const input = document.getElementById('filenamePattern');
-      input.value += btn.dataset.token;
-      settings.filenamePattern = input.value;
-      updateFilenameExample();
-      saveSettings();
+    // Token button event listeners
+    document.querySelectorAll('.token-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById('filenamePattern');
+        if (input) {
+          input.value += btn.dataset.token;
+          settings.filenamePattern = input.value;
+          updateFilenameExample();
+          saveSettings();
+        }
+      });
     });
-  });
 
-  document.getElementById('paginationDelay').addEventListener('input', (e) => {
-    settings.paginationDelay = parseFloat(e.target.value) || 0;
-    saveSettings();
-  });
+    // Input field event listeners
+    const paginationDelayInput = document.getElementById('paginationDelay');
+    if (paginationDelayInput) {
+      paginationDelayInput.addEventListener('input', (e) => {
+        settings.paginationDelay = parseFloat(e.target.value) || 0;
+        saveSettings();
+      });
+    }
 
-  document.getElementById('scrollDelay').addEventListener('input', (e) => {
-    settings.scrollDelay = parseInt(e.target.value) || 0;
-    saveSettings();
-  });
+    const scrollDelayInput = document.getElementById('scrollDelay');
+    if (scrollDelayInput) {
+      scrollDelayInput.addEventListener('input', (e) => {
+        settings.scrollDelay = parseInt(e.target.value) || 0;
+        saveSettings();
+      });
+    }
 
-  document.getElementById('concurrentDownloads').addEventListener('input', (e) => {
-    const value = parseInt(e.target.value) || 1;
-    settings.concurrentDownloads = Math.max(1, Math.min(10, value));
-    document.getElementById('concurrentValue').textContent = settings.concurrentDownloads;
-    e.target.value = settings.concurrentDownloads;
-    saveSettings();
-  });
+    const concurrentDownloadsInput = document.getElementById('concurrentDownloads');
+    if (concurrentDownloadsInput) {
+      concurrentDownloadsInput.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value) || 1;
+        settings.concurrentDownloads = Math.max(1, Math.min(10, value));
+        const concurrentValueSpan = document.getElementById('concurrentValue');
+        if (concurrentValueSpan) {
+          concurrentValueSpan.textContent = settings.concurrentDownloads;
+        }
+        e.target.value = settings.concurrentDownloads;
+        saveSettings();
+      });
+    }
 
-  document.getElementById('downloadDelay').addEventListener('input', (e) => {
-    settings.downloadDelay = parseFloat(e.target.value) || 0;
-    saveSettings();
-  });
+    const downloadDelayInput = document.getElementById('downloadDelay');
+    if (downloadDelayInput) {
+      downloadDelayInput.addEventListener('input', (e) => {
+        settings.downloadDelay = parseFloat(e.target.value) || 0;
+        saveSettings();
+      });
+    }
 
-  document.getElementById('batchSize').addEventListener('input', (e) => {
-    settings.batchSize = parseInt(e.target.value) || 0;
-    saveSettings();
-  });
+    const batchSizeInput = document.getElementById('batchSize');
+    if (batchSizeInput) {
+      batchSizeInput.addEventListener('input', (e) => {
+        settings.batchSize = parseInt(e.target.value) || 0;
+        saveSettings();
+      });
+    }
 
-  document.getElementById('downloadFolder').addEventListener('input', (e) => {
-    const folder = e.target.value.trim();
-    settings.downloadFolder = folder;
-    validateFolderPath(folder);
-    saveSettings();
-  });
+    const downloadFolderInput = document.getElementById('downloadFolder');
+    if (downloadFolderInput) {
+      downloadFolderInput.addEventListener('input', (e) => {
+        const folder = e.target.value.trim();
+        settings.downloadFolder = folder;
+        validateFolderPath(folder);
+        saveSettings();
+      });
+    }
 
-  const numericInputs = [
-    { id: 'paginationDelay', min: 0, max: 30 },
-    { id: 'scrollDelay', min: 0, max: 5000 },
-    { id: 'downloadDelay', min: 0, max: 60 },
-    { id: 'batchSize', min: 0, max: 1000 }
-  ];
+    // Numeric input validation
+    const numericInputs = [
+      { id: 'paginationDelay', min: 0, max: 30 },
+      { id: 'scrollDelay', min: 0, max: 5000 },
+      { id: 'downloadDelay', min: 0, max: 60 },
+      { id: 'batchSize', min: 0, max: 1000 }
+    ];
 
-  numericInputs.forEach(({ id, min, max }) => {
-    const input = document.getElementById(id);
-    input.addEventListener('blur', (e) => {
-      validateNumericInput(e.target, min, max);
-    });
-    input.addEventListener('input', (e) => {
-      const value = parseFloat(e.target.value);
-      if (value < min || value > max) {
-        e.target.classList.add('input-invalid');
-      } else {
-        e.target.classList.remove('input-invalid');
+    numericInputs.forEach(({ id, min, max }) => {
+      const input = document.getElementById(id);
+      if (input) {
+        input.addEventListener('blur', (e) => {
+          validateNumericInput(e.target, min, max);
+        });
+        input.addEventListener('input', (e) => {
+          const value = parseFloat(e.target.value);
+          if (value < min || value > max) {
+            e.target.classList.add('input-invalid');
+          } else {
+            e.target.classList.remove('input-invalid');
+          }
+        });
       }
     });
-  });
 
-  document.getElementById('filenamePattern').addEventListener('input', (e) => {
-    const pattern = e.target.value;
-    settings.filenamePattern = pattern;
-    validateFilenamePattern(pattern);
-    updateFilenameExample();
-    saveSettings();
-  });
+    const filenamePatternInput = document.getElementById('filenamePattern');
+    if (filenamePatternInput) {
+      filenamePatternInput.addEventListener('input', (e) => {
+        const pattern = e.target.value;
+        settings.filenamePattern = pattern;
+        validateFilenamePattern(pattern);
+        updateFilenameExample();
+        saveSettings();
+      });
+    }
 
-  document.getElementById('helpToggle').addEventListener('click', toggleHelpSection);
+    const helpToggleBtn = document.getElementById('helpToggle');
+    if (helpToggleBtn) {
+      helpToggleBtn.addEventListener('click', toggleHelpSection);
+    }
 
-  document.getElementById('resetSettings').addEventListener('click', resetToDefaults);
+    const resetSettingsBtn = document.getElementById('resetSettings');
+    if (resetSettingsBtn) {
+      resetSettingsBtn.addEventListener('click', resetToDefaults);
+    }
 
-  chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === 'gallery-status-update') {
-      updateGalleryStatus(message.data);
-    }
-    if (message.type === 'images-update') {
-      collectedImages = message.images || [];
-      updateImageDisplay();
-    }
-    if (message.type === 'pagination-status-update') {
-      updatePaginationStatus(message.data);
-    }
-    if (message.type === 'download/progress') {
-      updateDownloadProgress(message.data);
-    }
-    if (message.type === 'download/complete') {
-      updateDownloadComplete(message.data);
-    }
-    if (message.type === 'download/batch-confirm') {
-      handleBatchConfirmation(message.data);
-    }
-    if (message.type === MESSAGE_TYPES.TOAST_SHOW) {
-      toast.show(message.message, message.toastType || 'info', message.duration);
-    }
-    if (message.type === MESSAGE_TYPES.MEMORY_WARNING) {
-      handleMemoryWarning(message.data);
-    }
-    if (message.type === MESSAGE_TYPES.MEMORY_STATS) {
-      updateMemoryStats(message.data);
-    }
-  });
+    // Runtime message listener
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message.type === 'gallery-status-update') {
+        updateGalleryStatus(message.data);
+      }
+      if (message.type === 'images-update') {
+        collectedImages = message.images || [];
+        updateImageDisplay();
+      }
+      if (message.type === 'pagination-status-update') {
+        updatePaginationStatus(message.data);
+      }
+      if (message.type === 'download/progress') {
+        updateDownloadProgress(message.data);
+      }
+      if (message.type === 'download/complete') {
+        updateDownloadComplete(message.data);
+      }
+      if (message.type === 'download/batch-confirm') {
+        handleBatchConfirmation(message.data);
+      }
+      if (message.type === MESSAGE_TYPES.TOAST_SHOW) {
+        toast.show(message.message, message.toastType || 'info', message.duration);
+      }
+      if (message.type === MESSAGE_TYPES.MEMORY_WARNING) {
+        handleMemoryWarning(message.data);
+      }
+      if (message.type === MESSAGE_TYPES.MEMORY_STATS) {
+        updateMemoryStats(message.data);
+      }
+    });
+    
+    console.log('Event listeners initialized successfully');
+  } catch (error) {
+    console.error('Error setting up event listeners:', error);
+    // Don't throw - allow initialization to continue
+  }
 }
 
 async function sendMessageWithFallback(tabId, message) {
@@ -811,13 +925,20 @@ function updateImageDisplay() {
 }
 
 function updateImageStats() {
-  document.getElementById('totalImages').textContent = `${collectedImages.length} image${collectedImages.length !== 1 ? 's' : ''}`;
+  const totalImagesEl = document.getElementById('totalImages');
+  if (totalImagesEl) {
+    totalImagesEl.textContent = `${collectedImages.length} image${collectedImages.length !== 1 ? 's' : ''}`;
+  }
 }
 
 function updateFilenameExample() {
-  const pattern = document.getElementById('filenamePattern').value;
-  const example = generateFilenameExample(pattern);
-  document.getElementById('filenameExample').textContent = example;
+  const patternInput = document.getElementById('filenamePattern');
+  const exampleEl = document.getElementById('filenameExample');
+  if (patternInput && exampleEl) {
+    const pattern = patternInput.value;
+    const example = generateFilenameExample(pattern);
+    exampleEl.textContent = example;
+  }
 }
 
 function generateFilenameExample(pattern) {
