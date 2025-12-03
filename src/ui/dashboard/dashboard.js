@@ -277,13 +277,13 @@ function safeAddEventListener(elementId, event, handler) {
   }
 }
 
-function safeAddEventListenerToAll(selector, event, handler) {
+function safeAddEventListenerToAll(selector, event, handler, suppressWarning = false) {
   const elements = document.querySelectorAll(selector);
   if (elements.length > 0) {
     elements.forEach(element => {
       element.addEventListener(event, handler);
     });
-  } else {
+  } else if (!suppressWarning) {
     console.warn(`No elements found for selector '${selector}'`);
   }
 }
