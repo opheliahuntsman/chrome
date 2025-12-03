@@ -56,7 +56,12 @@ StepGallery is a professional Chrome extension that merges the best features of 
 ```
 StepGallery/
 ├── manifest.json                  # Extension configuration
-├── background.js                  # Service worker entry point
+├── package.json                   # Build dependencies
+├── vite.config.background.js      # Vite build config for background
+├── vite.config.content.js         # Vite build config for content
+├── dist/                          # Built files (generated)
+│   ├── background.js              # Compiled service worker
+│   └── content.js                 # Compiled content script
 ├── icons/                         # Extension icons
 ├── lib/                           # Third-party libraries (self-contained)
 │   ├── papaparse.min.js          # CSV generation
@@ -67,17 +72,19 @@ StepGallery/
 │   │   ├── logger.js             # Logging system
 │   │   ├── content-hasher.js     # Duplicate detection
 │   │   └── input-sanitizer.js    # Security sanitization
-│   ├── content/                  # Content scripts
+│   ├── content/                  # Content scripts (source)
 │   │   ├── content-main.js       # Main content script
 │   │   ├── pagination-engine.js  # Pagination logic
 │   │   ├── gallery-detector.js   # Gallery detection
 │   │   ├── image-extractor.js    # Image extraction
 │   │   └── network-monitor.js    # API monitoring
-│   ├── background/               # Service worker modules
-│   │   ├── state-manager.js      # State management
-│   │   ├── download-manager.js   # Download orchestration
-│   │   ├── export-controller.js  # Export coordination
-│   │   └── message-router.js     # Message handling
+│   ├── background/               # Service worker modules (source)
+│   │   ├── background-main.js    # Service worker entry point
+│   │   ├── state-manager.js      # State management (singleton)
+│   │   ├── download-manager.js   # Download orchestration (singleton)
+│   │   ├── export-controller.js  # Export coordination (singleton)
+│   │   ├── icon-status-manager.js # Icon badge management (singleton)
+│   │   └── message-router.js     # Message handling (singleton)
 │   └── ui/                       # User interface
 │       └── dashboard/            # Main dashboard
 │           ├── dashboard.html
@@ -91,12 +98,19 @@ StepGallery/
 
 ## Installation
 
-### Manual Installation (Development)
+### Build from Source
 1. Clone or download this repository
+2. Install dependencies: `npm install`
+3. Build the extension: `npm run build`
+   - This creates `dist/background.js` and `dist/content.js` from source
+4. The built files are referenced in `manifest.json`
+
+### Manual Installation (Development)
+1. Complete the build steps above
 2. Open Chrome and navigate to `chrome://extensions/`
 3. Enable "Developer mode" (toggle in top-right)
 4. Click "Load unpacked"
-5. Select the `StepGallery` directory
+5. Select the repository root directory
 6. Extension should now appear in your toolbar
 
 ### Production Distribution
