@@ -46,6 +46,12 @@ export class ToastNotifier {
   initialize() {
     if (this.container) return;
 
+    // Ensure document.body exists
+    if (!document.body) {
+      console.warn('ToastNotifier: document.body not available');
+      return;
+    }
+
     this.injectStyles();
 
     const existingContainer = document.getElementById('toast-container');
