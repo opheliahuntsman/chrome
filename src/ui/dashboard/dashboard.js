@@ -422,37 +422,39 @@ function setupEventListeners() {
       resetSettingsBtn.addEventListener('click', resetToDefaults);
     }
 
-    // Runtime message listener
-    chrome.runtime.onMessage.addListener((message) => {
-      if (message.type === 'gallery-status-update') {
-        updateGalleryStatus(message.data);
-      }
-      if (message.type === 'images-update') {
-        collectedImages = message.images || [];
-        updateImageDisplay();
-      }
-      if (message.type === 'pagination-status-update') {
-        updatePaginationStatus(message.data);
-      }
-      if (message.type === 'download/progress') {
-        updateDownloadProgress(message.data);
-      }
-      if (message.type === 'download/complete') {
-        updateDownloadComplete(message.data);
-      }
-      if (message.type === 'download/batch-confirm') {
-        handleBatchConfirmation(message.data);
-      }
-      if (message.type === MESSAGE_TYPES.TOAST_SHOW) {
-        toast.show(message.message, message.toastType || 'info', message.duration);
-      }
-      if (message.type === MESSAGE_TYPES.MEMORY_WARNING) {
-        handleMemoryWarning(message.data);
-      }
-      if (message.type === MESSAGE_TYPES.MEMORY_STATS) {
-        updateMemoryStats(message.data);
-      }
-    });
+    // Runtime message listener (only if Chrome extension API is available)
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+      chrome.runtime.onMessage.addListener((message) => {
+        if (message.type === 'gallery-status-update') {
+          updateGalleryStatus(message.data);
+        }
+        if (message.type === 'images-update') {
+          collectedImages = message.images || [];
+          updateImageDisplay();
+        }
+        if (message.type === 'pagination-status-update') {
+          updatePaginationStatus(message.data);
+        }
+        if (message.type === 'download/progress') {
+          updateDownloadProgress(message.data);
+        }
+        if (message.type === 'download/complete') {
+          updateDownloadComplete(message.data);
+        }
+        if (message.type === 'download/batch-confirm') {
+          handleBatchConfirmation(message.data);
+        }
+        if (message.type === MESSAGE_TYPES.TOAST_SHOW) {
+          toast.show(message.message, message.toastType || 'info', message.duration);
+        }
+        if (message.type === MESSAGE_TYPES.MEMORY_WARNING) {
+          handleMemoryWarning(message.data);
+        }
+        if (message.type === MESSAGE_TYPES.MEMORY_STATS) {
+          updateMemoryStats(message.data);
+        }
+      });
+    }
     
     console.log('Event listeners initialized successfully');
   } catch (error) {
@@ -826,12 +828,18 @@ function updatePaginationButtons(state) {
   const cancelBtn = document.getElementById('cancelPagination');
   const stopBtn = document.getElementById('stopPagination');
 
+  // Early return if required buttons don't exist
+  if (!startBtn || !stopBtn) {
+    console.warn('Pagination buttons not found, skipping button update');
+    return;
+  }
+
   switch (state) {
     case PAGINATION_STATES.IDLE:
       startBtn.style.display = 'inline-block';
-      pauseBtn.style.display = 'none';
-      resumeBtn.style.display = 'none';
-      cancelBtn.style.display = 'none';
+      if (pauseBtn) pauseBtn.style.display = 'none';
+      if (resumeBtn) resumeBtn.style.display = 'none';
+      if (cancelBtn) cancelBtn.style.display = 'none';
       stopBtn.style.display = 'inline-block';
       startBtn.disabled = false;
       stopBtn.disabled = true;
@@ -839,23 +847,31 @@ function updatePaginationButtons(state) {
 
     case PAGINATION_STATES.RUNNING:
       startBtn.style.display = 'none';
-      pauseBtn.style.display = 'inline-block';
-      resumeBtn.style.display = 'none';
-      cancelBtn.style.display = 'inline-block';
+      if (pauseBtn) {
+        pauseBtn.style.display = 'inline-block';
+        pauseBtn.disabled = false;
+      }
+      if (resumeBtn) resumeBtn.style.display = 'none';
+      if (cancelBtn) {
+        cancelBtn.style.display = 'inline-block';
+        cancelBtn.disabled = false;
+      }
       stopBtn.style.display = 'inline-block';
-      pauseBtn.disabled = false;
-      cancelBtn.disabled = false;
       stopBtn.disabled = false;
       break;
 
     case PAGINATION_STATES.PAUSED:
       startBtn.style.display = 'none';
-      pauseBtn.style.display = 'none';
-      resumeBtn.style.display = 'inline-block';
-      cancelBtn.style.display = 'inline-block';
+      if (pauseBtn) pauseBtn.style.display = 'none';
+      if (resumeBtn) {
+        resumeBtn.style.display = 'inline-block';
+        resumeBtn.disabled = false;
+      }
+      if (cancelBtn) {
+        cancelBtn.style.display = 'inline-block';
+        cancelBtn.disabled = false;
+      }
       stopBtn.style.display = 'inline-block';
-      resumeBtn.disabled = false;
-      cancelBtn.disabled = false;
       stopBtn.disabled = false;
       break;
 
@@ -863,9 +879,9 @@ function updatePaginationButtons(state) {
     case PAGINATION_STATES.COMPLETE:
     case PAGINATION_STATES.ERROR:
       startBtn.style.display = 'inline-block';
-      pauseBtn.style.display = 'none';
-      resumeBtn.style.display = 'none';
-      cancelBtn.style.display = 'none';
+      if (pauseBtn) pauseBtn.style.display = 'none';
+      if (resumeBtn) resumeBtn.style.display = 'none';
+      if (cancelBtn) cancelBtn.style.display = 'none';
       stopBtn.style.display = 'inline-block';
       startBtn.disabled = false;
       stopBtn.disabled = true;
@@ -873,9 +889,9 @@ function updatePaginationButtons(state) {
 
     default:
       startBtn.style.display = 'inline-block';
-      pauseBtn.style.display = 'none';
-      resumeBtn.style.display = 'none';
-      cancelBtn.style.display = 'none';
+      if (pauseBtn) pauseBtn.style.display = 'none';
+      if (resumeBtn) resumeBtn.style.display = 'none';
+      if (cancelBtn) cancelBtn.style.display = 'none';
       stopBtn.style.display = 'inline-block';
       startBtn.disabled = false;
       stopBtn.disabled = true;
