@@ -6,13 +6,20 @@ const filenameGenerator = new FilenameGenerator();
 const toast = new ToastNotifier();
 
 // Global error handlers to prevent UI freeze
+let lastErrorTime = 0;
+const ERROR_DEBOUNCE_MS = 1000; // Only re-enable UI once per second
+
 window.addEventListener('error', (event) => {
   console.error('Global error caught:', event.error);
-  // Ensure UI remains interactive even after errors
-  try {
-    enableUIInteraction();
-  } catch (e) {
-    console.error('Failed to enable UI interaction:', e);
+  // Ensure UI remains interactive even after errors (debounced)
+  const now = Date.now();
+  if (now - lastErrorTime > ERROR_DEBOUNCE_MS) {
+    lastErrorTime = now;
+    try {
+      enableUIInteraction();
+    } catch (e) {
+      console.error('Failed to enable UI interaction:', e);
+    }
   }
 });
 
@@ -270,6 +277,17 @@ function safeAddEventListener(elementId, event, handler) {
   }
 }
 
+function safeAddEventListenerToAll(selector, event, handler) {
+  const elements = document.querySelectorAll(selector);
+  if (elements.length > 0) {
+    elements.forEach(element => {
+      element.addEventListener(event, handler);
+    });
+  } else {
+    console.warn(`No elements found for selector '${selector}'`);
+  }
+}
+
 function setupEventListeners() {
   safeAddEventListener('startPagination', 'click', startPagination);
   safeAddEventListener('pausePagination', 'click', pausePagination);
@@ -285,20 +303,16 @@ function setupEventListeners() {
     saveSettings();
   });
 
-  const tokenButtons = document.querySelectorAll('.token-btn');
-  if (tokenButtons.length > 0) {
-    tokenButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const input = document.getElementById('filenamePattern');
-        if (input) {
-          input.value += btn.dataset.token;
-          settings.filenamePattern = input.value;
-          updateFilenameExample();
-          saveSettings();
-        }
-      });
-    });
-  }
+  safeAddEventListenerToAll('.token-btn', 'click', (event) => {
+    const btn = event.currentTarget;
+    const input = document.getElementById('filenamePattern');
+    if (input) {
+      input.value += btn.dataset.token;
+      settings.filenamePattern = input.value;
+      updateFilenameExample();
+      saveSettings();
+    }
+  });
 
   safeAddEventListener('paginationDelay', 'input', (e) => {
     settings.paginationDelay = parseFloat(e.target.value) || 0;

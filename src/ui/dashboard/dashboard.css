@@ -79,7 +79,12 @@ body {
   pointer-events: auto !important;
 }
 
-.dashboard * {
+/* Ensure interactive elements are clickable */
+.dashboard button,
+.dashboard input,
+.dashboard select,
+.dashboard a,
+.dashboard label {
   pointer-events: auto;
 }
 
